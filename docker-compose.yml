@@ -2,14 +2,14 @@ services:
   app:
     build: .
     ports:
-      - "3000:3000"
+      - "${PORT:-3000}:${PORT:-3000}"
     env_file:
       - .env
     networks:
       - entalla-net
       - shared-net
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:3000/api-docs"]
+      test: ["CMD", "curl", "-f", "http://localhost:${PORT:-3000}/api-docs"]
       interval: 10s
       timeout: 5s
       retries: 6

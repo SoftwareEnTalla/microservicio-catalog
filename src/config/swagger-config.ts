@@ -44,6 +44,7 @@ export function setupSwagger(
   version: string = "1.0"
 ): string {
 try{
+  const localPort = String(process.env.PORT || "3000");
       const swaggerConfig = new DocumentBuilder()
         .setTitle(title)
         .setDescription(description)
@@ -69,7 +70,7 @@ try{
         // Servidores (para diferentes entornos)
         .addServer("https://api.production.com", "Production")
         .addServer("https://api.staging.com", "Staging")
-        .addServer("http://localhost:3000", "Local Development")
+        .addServer(`http://localhost:${localPort}`, "Local Development")
         .build();
 
       const swaggerDocument = SwaggerModule.createDocument(app, swaggerConfig, {
