@@ -70,7 +70,7 @@ try{
         // Servidores (para diferentes entornos)
         .addServer("https://api.production.com", "Production")
         .addServer("https://api.staging.com", "Staging")
-        .addServer(`http://localhost:${localPort}`, "Local Development")
+        .addServer(, "Local Development")
         .build();
 
       const swaggerDocument = SwaggerModule.createDocument(app, swaggerConfig, {
