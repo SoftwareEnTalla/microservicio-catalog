@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2025 SoftwarEnTalla
+ * Copyright (c) 2026 SoftwarEnTalla
  * Licencia: MIT
  * Contacto: softwarentalla@gmail.com
  * CEOs: 
@@ -30,5 +30,7 @@
 export * from "./catalogdeleted.event"; 
 export * from "./catalogcreated.event";
 export * from "./catalogupdated.event";
+
+export * from "./event-registry";
 export * from "./base.event";
 export * from "./catalog-failed.event";

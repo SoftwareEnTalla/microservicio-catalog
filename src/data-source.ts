@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2025 SoftwarEnTalla
+ * Copyright (c) 2026 SoftwarEnTalla
  * Licencia: MIT
  * Contacto: softwarentalla@gmail.com
  * CEOs: 
@@ -36,6 +36,7 @@ import path from "path";
 import "reflect-metadata";
 import { CustomPostgresOptions } from "./interfaces/typeorm.interface";
 import { logger } from '@core/logs/logger';
+import * as net from "net";
 
 dotenv.config();
 
@@ -46,9 +47,9 @@ export const AppDataSource = new DataSource({
   name: "catalog-service",
   host: process.env.DB_HOST || "localhost",
   port: Number(process.env.DB_PORT) || 5432,
-  username: process.env.DB_USER || "entalla",
-  password: process.env.DB_PASS || "entalla",
-  database: process.env.DB_NAME || "entalla",
+  username: process.env.DB_USERNAME || "postgres",
+  password: process.env.DB_PASSWORD || "postgres",
+  database: process.env.DB_NAME || "catalog-service",
   synchronize: process.env.NODE_ENV !== "production",
   logging: process.env.NODE_ENV !== "production",
   entities: [path.join(__dirname, "**/*.entity.{js,ts}")],
@@ -61,6 +62,44 @@ export const AppDataSource = new DataSource({
     application_name: "nestjs-application",
   },
 } as CustomPostgresOptions);
+// Espera a que Postgres esté aceptando conexiones TCP
+export async function waitForPostgres(
+  host: string,
+  port: number,
+  timeoutMs: number = 60000,
+  intervalMs: number = 1000
+) {
+  const start = Date.now();
+  return new Promise<void>((resolve, reject) => {
+    const tryConnect = () => {
+      const socket = new net.Socket();
+      socket.setTimeout(3000);
+      socket.once('connect', () => {
+        socket.destroy();
+        resolve();
+      });
+      socket.once('error', () => {
+        socket.destroy();
+        if (Date.now() - start >= timeoutMs) {
+          reject(new Error(`Timeout esperando Postgres en ${host}:${port}`));
+        } else {
+          setTimeout(tryConnect, intervalMs);
+        }
+      });
+      socket.once('timeout', () => {
+        socket.destroy();
+        if (Date.now() - start >= timeoutMs) {
+          reject(new Error(`Timeout esperando Postgres en ${host}:${port}`));
+        } else {
+          setTimeout(tryConnect, intervalMs);
+        }
+      });
+      socket.connect(port, host);
+    };
+    tryConnect();
+  });
+}
+
 
 
 // Añade esta función después de initializeDatabase()
@@ -69,9 +108,9 @@ export async function createDatabaseIfNotExists(
   owner: string = "postgres"
 ) {
   const adminPoolConfig: PoolConfig = {
-    user: process.env.DB_USER || "postgres",
+    user: process.env.DB_USERNAME || "postgres",
     host: process.env.DB_HOST || "localhost",
-    password: process.env.DB_PASS || "postgres",
+    password: process.env.DB_PASSWORD || "postgres",
     port: Number(process.env.DB_PORT) || 5432,
     database: "postgres", // Conectamos a la BD por defecto
   };
@@ -125,10 +164,10 @@ export async function createDatabaseIfNotExists(
 
 async function checkPostgreSQLExtensions() {
   const poolConfig: PoolConfig = {
-    user: process.env.DB_USER || "entalla",
+    user: process.env.DB_USERNAME || "entalla",
     host: process.env.DB_HOST || "localhost",
     database: process.env.DB_NAME || "entalla",
-    password: process.env.DB_PASS || "entalla",
+    password: process.env.DB_PASSWORD || "entalla",
     port: Number(process.env.DB_PORT) || 5432,
   };
 
@@ -158,10 +197,15 @@ export async function initializeDatabase() {
   try {
     logger.info("Data Source Object: ",AppDataSource);
     if (!AppDataSource.isInitialized) {
+      // Esperar a que Postgres esté disponible
+      await waitForPostgres(
+        process.env.DB_HOST || "localhost",
+        Number(process.env.DB_PORT) || 5432
+      );
       // Primero verificar/crear la BD
       await createDatabaseIfNotExists(
         process.env.DB_NAME || "entalla",
-        process.env.DB_USER || "entalla"
+        process.env.DB_USERNAME || "entalla"
       );
       // Luego el resto de la inicialización
       await checkPostgreSQLExtensions();

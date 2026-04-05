@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2025 SoftwarEnTalla
+ * Copyright (c) 2026 SoftwarEnTalla
  * Licencia: MIT
  * Contacto: softwarentalla@gmail.com
  * CEOs: 
@@ -32,7 +32,7 @@
 import { NestFactory } from "@nestjs/core";
 import { SwaggerModule, DocumentBuilder } from "@nestjs/swagger";
 import { CatalogAppModule } from "./app.module";
-import { AppDataSource, createDatabaseIfNotExists } from "./data-source";
+import { AppDataSource, createDatabaseIfNotExists, waitForPostgres } from "./data-source";
 import { INestApplication, Logger } from "@nestjs/common";
 import { PostgresConnectionOptions } from "typeorm/driver/postgres/PostgresConnectionOptions";
 import 'tsconfig-paths/register';
@@ -76,13 +76,20 @@ async function bootstrap() {
   dotenv.config(); 
 
   try {
-    await createDatabaseIfNotExists(
+    const INCLUDE_DB = process.env.INCLUDING_DATA_BASE_SYSTEM === 'true';
+    if (INCLUDE_DB) {
+      await waitForPostgres(
+        process.env.DB_HOST || "localhost",
+        Number(process.env.DB_PORT) || 5432
+      );
+      await createDatabaseIfNotExists(
         process.env.DB_NAME || "entalla",
-        process.env.DB_USER || "entalla"
-    );
-    if (!AppDataSource.isInitialized) {
-      await AppDataSource.initialize();
-      logger.success("Database connection established");
+        process.env.DB_USERNAME || "entalla"
+      );
+      if (!AppDataSource.isInitialized) {
+        await AppDataSource.initialize();
+        logger.success("Database connection established");
+      }
     }
     logger.info(`ℹCreando instancia del módulo CatalogAppModule...`);
     const app = await NestFactory.create(CatalogAppModule, {
@@ -139,9 +146,11 @@ async function bootstrap() {
       process.env.LOG_READY = "true";
       printRoutes(app);
     });
-    logger.info(`ℹInstancia de aplicación escuchando por el puerto:port `);
+    logger.info("ℹInstancia de aplicación escuchando por el puerto: " + port);
     // Acceso seguro a las propiedades con type assertion
-    const dbOptions = AppDataSource.options as PostgresConnectionOptions;
+    const dbOptions = INCLUDE_DB && AppDataSource.isInitialized
+      ? (AppDataSource.options as PostgresConnectionOptions)
+      : undefined;
 
     logger.print(
       `\n` +
@@ -151,10 +160,15 @@ async function bootstrap() {
         `• API:      ${protocol}://${host}:${port}/${globalPrefix}\n` +
         `• Swagger:  ${protocol}://${host}:${port}/${swaggerPath}\n` +
         `• Entorno:  ${process.env.NODE_ENV || "development"}\n` +
+        '• LANDING_APP: ' + (process.env.LANDING_APP || '(no definido)') + '\n' +
+        '• ADMIN_APP:   ' + (process.env.ADMIN_APP || '(no definido)') + '\n' +
+        '• LOG_API_BASE_URL: ' + (process.env.LOG_API_BASE_URL || '(no definido)') + '\n' +
         `----------------------------------------\n` +
         `📦 Base de datos:\n` +
-        `• Nombre:   ${dbOptions.database}\n` +
-        `• Servidor: ${dbOptions.host}:${dbOptions.port}\n` +
+        (dbOptions
+          ? `• Nombre:   ${dbOptions.database}\n` +
+            `• Servidor: ${dbOptions.host}:${dbOptions.port}\n`
+          : `• Deshabilitada en este entorno (INCLUDING_DATA_BASE_SYSTEM=false)\n`) +
         `========================================`
     );
   } catch (error) {

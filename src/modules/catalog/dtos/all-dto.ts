@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2025 SoftwarEnTalla
+ * Copyright (c) 2026 SoftwarEnTalla
  * Licencia: MIT
  * Contacto: softwarentalla@gmail.com
  * CEOs: 
@@ -28,15 +28,18 @@
  *
  */
 
-import { InputType, Field, ObjectType } from '@nestjs/graphql';
+import { InputType, Field, Float, Int, ObjectType } from '@nestjs/graphql';
 import { ApiProperty } from '@nestjs/swagger';
 import {
   IsBoolean,
   IsDate,
+  IsInt,
   IsNotEmpty,
+  IsNumber,
   IsOptional,
   IsString,
   IsObject,
+  IsUUID,
   ValidateNested,
 } from 'class-validator';
 
@@ -103,6 +106,8 @@ export class BaseCatalogDto {
   @IsNotEmpty()
   @Field(() => Boolean, { nullable: false })
   isActive: boolean = false; // Por defecto, el objeto no está activo
+
+
 
   // Constructor
   constructor(partial: Partial<BaseCatalogDto>) {

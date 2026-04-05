@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2025 SoftwarEnTalla
+ * Copyright (c) 2026 SoftwarEnTalla
  * Licencia: MIT
  * Contacto: softwarentalla@gmail.com
  * CEOs: 
@@ -31,6 +31,22 @@
 
 import { IEvent } from '@nestjs/cqrs';
 
+export interface EventMetadata {
+  initiatedBy: string;
+  correlationId: string;
+  causationId?: string;
+  eventId?: string;
+  eventName?: string;
+  eventVersion?: string;
+  sourceService?: string;
+  traceId?: string;
+  retryCount?: number;
+  occurredOn?: string;
+  idempotencyKey?: string;
+  originalTopic?: string;
+  [key: string]: any;
+}
+
 export abstract class BaseEvent implements IEvent {
   //Constructor de BaseEvent
   constructor(
@@ -46,9 +62,5 @@ export abstract class BaseFailedEvent implements IEvent {
 
 export interface PayloadEvent<T = any> {
   instance: T;
-  metadata: {
-    initiatedBy: string;
-    correlationId: string;
-    [key: string]: any;
-  };
+  metadata: EventMetadata;
 }

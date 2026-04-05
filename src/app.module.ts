@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2025 SoftwarEnTalla
+ * Copyright (c) 2026 SoftwarEnTalla
  * Licencia: MIT
  * Contacto: softwarentalla@gmail.com
  * CEOs: 
@@ -29,13 +29,13 @@
  */
 
 
-import { DynamicModule, Module, OnModuleInit } from "@nestjs/common";
+import { DynamicModule, Module, OnModuleInit, Optional, Inject } from "@nestjs/common";
 import { DataSource } from "typeorm";
 import { TypeOrmModule } from "@nestjs/typeorm";
 import { ConfigModule } from "@nestjs/config";
 import { CatalogCommandController } from "./modules/catalog/controllers/catalogcommand.controller";
 import { CatalogModule } from "./modules/catalog/modules/catalog.module";
-import { CommandBus, EventBus, UnhandledExceptionBus } from "@nestjs/cqrs";
+import { CqrsModule } from "@nestjs/cqrs";
 import { AppDataSource, initializeDatabase } from "./data-source";
 import { CatalogQueryController } from "./modules/catalog/controllers/catalogquery.controller";
 import { GraphQLModule } from "@nestjs/graphql";
@@ -47,6 +47,7 @@ import { LoggingModule } from "./modules/catalog/modules/logger.module";
 import { ModuleRef } from "@nestjs/core";
 import { ServiceRegistry } from "@core/service-registry";
 import LoggerService, { logger } from "@core/logs/logger";
+
 
 //import GraphQLJSON from "graphql-type-json";
 
@@ -87,40 +88,49 @@ import LoggerService, { logger } from "@core/logs/logger";
      * Conexión asíncrona con PostgreSQL y configuración avanzada.
      * Se inicializa primero la conexión a la base de datos.
      */
-    TypeOrmModule.forRootAsync({
-      imports: [ConfigModule], // Requiere ConfigModule para variables de entorno
-      useFactory: async () => {
-        const dataSource = await initializeDatabase(); // Inicializa conexión
-        return {
-          ...dataSource.options, // Configuración base del DataSource
-          autoLoadEntities: true, // Carga automática de entidades
-          retryAttempts: 5, // Intentos de reconexión en caso de fallo
-          retryDelay: 3000, // Tiempo entre intentos (3 segundos)
-          synchronize: process.env.NODE_ENV !== "production", // Sincroniza esquema solo en desarrollo
-          logging: process.env.DB_LOGGING === "true", // Logging configurable
-        };
-      },
-    }),
+    // TypeORM solo si INCLUDING_DATA_BASE_SYSTEM=true
+    ...(process.env.INCLUDING_DATA_BASE_SYSTEM === 'true'
+      ? [
+          TypeOrmModule.forRootAsync({
+            imports: [ConfigModule],
+            useFactory: async () => {
+              const dataSource = await initializeDatabase();
+              return {
+                ...dataSource.options,
+                autoLoadEntities: true,
+                retryAttempts: 5,
+                retryDelay: 3000,
+                synchronize: process.env.NODE_ENV !== "production",
+                logging: process.env.DB_LOGGING === "true",
+              };
+            },
+          }),
+        ]
+      : []),
 
     /**
      * Módulos Catalog de la aplicación
      */
+    CqrsModule,
     CatalogModule,
+        
     /**
      * Módulo Logger de la aplicación
      */
     LoggingModule,
 
-    // Módulo GraphQLModule para Catalog
-    GraphQLModule.forRoot<ApolloDriverConfig>({
-      driver: ApolloDriver,
-      //autoSchemaFile: "schema.gql", // Opcional: genera un archivo de esquema
-      autoSchemaFile: true,
-      buildSchemaOptions: {
-        dateScalarMode: "timestamp",
-      },
-      // resolvers: { JSON: GraphQLJSON }, // Añade esta línea
-    }),
+    // GraphQL solo si GRAPHQL_ENABLED=true
+    ...(process.env.GRAPHQL_ENABLED === 'true'
+      ? [
+          GraphQLModule.forRoot<ApolloDriverConfig>({
+            driver: ApolloDriver,
+            autoSchemaFile: true,
+            buildSchemaOptions: {
+              dateScalarMode: "timestamp",
+            },
+          }),
+        ]
+      : []),
   ],
 
   /**
@@ -144,15 +154,15 @@ import LoggerService, { logger } from "@core/logs/logger";
    * Registro de servicios globales y configuración de inyección de dependencias.
    */
   providers: [
-    // Sistema CQRS
-    UnhandledExceptionBus, // Manejador global de excepciones
-    CommandBus, // Bus de comandos
-    EventBus, // Bus de eventos
     // Configuración de Base de datos
-    {
-      provide: DataSource, // Token para inyección
-      useValue: AppDataSource, // Instancia singleton del DataSource
-    },
+    ...(process.env.INCLUDING_DATA_BASE_SYSTEM === 'true'
+      ? [
+          {
+            provide: DataSource,
+            useValue: AppDataSource,
+          },
+        ]
+      : []),
     // Se importan los servicios del módulo
     CatalogCommandService,
     CatalogQueryService,
@@ -173,11 +183,12 @@ export class CatalogAppModule implements OnModuleInit {
    * @param translocoService Servicio para manejo de idiomas
    */
   constructor(
-    private readonly dataSource: DataSource,
-    private moduleRef: ModuleRef
-    //private readonly translocoService: TranslocoService
+    private moduleRef: ModuleRef,
+    @Optional() @Inject(DataSource) private readonly dataSource?: DataSource
   ) {
-    this.checkDatabaseConnection();
+    if (process.env.INCLUDING_DATA_BASE_SYSTEM === 'true') {
+      this.checkDatabaseConnection();
+    }
     this.setupLanguageChangeHandling();
     this.onModuleInit();
   }
@@ -187,6 +198,7 @@ export class CatalogAppModule implements OnModuleInit {
     ServiceRegistry.getInstance().registryAll([
       CatalogCommandService,
       CatalogQueryService,
+    
     ]);
     const loggerService = ServiceRegistry.getInstance().get(
       "LoggerService"
@@ -202,6 +214,7 @@ export class CatalogAppModule implements OnModuleInit {
    */
   private async checkDatabaseConnection() {
     try {
+      if (!this.dataSource) return;
       await this.dataSource.query("SELECT 1");
       logger.log("✅ Conexión a la base de datos verificada correctamente");
     } catch (error) {

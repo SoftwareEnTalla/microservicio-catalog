@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2025 SoftwarEnTalla
+ * Copyright (c) 2026 SoftwarEnTalla
  * Licencia: MIT
  * Contacto: softwarentalla@gmail.com
  * CEOs: 
@@ -31,10 +31,13 @@
 
 import { QueryHandler, IQueryHandler } from '@nestjs/cqrs';
 import { GetCatalogByFieldQuery } from '../getcatalogbyfield.query';
+import { CatalogQueryService } from '../../services/catalogquery.service';
 
 @QueryHandler(GetCatalogByFieldQuery)
 export class GetCatalogByFieldHandler implements IQueryHandler<GetCatalogByFieldQuery> {
+  constructor(private readonly queryService: CatalogQueryService) {}
+
   async execute(query: GetCatalogByFieldQuery) {
-    // Implementar lógica de la query
+    return this.queryService.findByField(query.filters?.field, query.filters?.value, { page: query.filters?.page ?? 1, size: query.filters?.limit ?? 10 } as any);
   }
 }

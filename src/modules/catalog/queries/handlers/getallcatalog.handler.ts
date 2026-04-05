@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2025 SoftwarEnTalla
+ * Copyright (c) 2026 SoftwarEnTalla
  * Licencia: MIT
  * Contacto: softwarentalla@gmail.com
  * CEOs: 
@@ -31,10 +31,13 @@
 
 import { QueryHandler, IQueryHandler } from '@nestjs/cqrs';
 import { GetAllCatalogQuery } from '../getallcatalog.query';
+import { CatalogQueryService } from '../../services/catalogquery.service';
 
 @QueryHandler(GetAllCatalogQuery)
 export class GetAllCatalogHandler implements IQueryHandler<GetAllCatalogQuery> {
+  constructor(private readonly queryService: CatalogQueryService) {}
+
   async execute(query: GetAllCatalogQuery) {
-    // Implementar lógica de la query
+    return this.queryService.findAll(query.filters);
   }
 }

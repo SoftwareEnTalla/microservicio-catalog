@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2025 SoftwarEnTalla
+ * Copyright (c) 2026 SoftwarEnTalla
  * Licencia: MIT
  * Contacto: softwarentalla@gmail.com
  * CEOs: 
@@ -30,6 +30,7 @@
 
 
 import { CatalogModule } from "@modules/catalog/modules/catalog.module";
+
 import { DocumentBuilder, SwaggerModule } from "@nestjs/swagger";
 import { logger } from '@core/logs/logger';
 
@@ -72,7 +73,7 @@ try{
         .build();
 
       const swaggerDocument = SwaggerModule.createDocument(app, swaggerConfig, {
-        include: [CatalogModule /*, AuthModule, ReportsModule*/], // Lista todos los módulos
+        include: [CatalogModule, /*, AuthModule, ReportsModule*/], // Lista todos los módulos
         deepScanRoutes: true, // Escanea en profundidad
         ignoreGlobalPrefix: false, // Considera el prefijo global (api/)
         extraModels: [], // Añade esto

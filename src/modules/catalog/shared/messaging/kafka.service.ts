@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2025 SoftwarEnTalla
+ * Copyright (c) 2026 SoftwarEnTalla
  * Licencia: MIT
  * Contacto: softwarentalla@gmail.com
  * CEOs: 
@@ -34,26 +34,49 @@ import { Kafka, Producer, Consumer, Admin } from "kafkajs";
 import { KafkaMessageCallback } from "../../../../interfaces/kafka";
 import { logger } from '@core/logs/logger';
 
+export interface KafkaPublishOptions {
+  headers?: Record<string, string | number | boolean | undefined | null>;
+  key?: string;
+}
+
+export interface KafkaSubscribeOptions {
+  fromBeginning?: boolean;
+}
+
 @Injectable()
 export class KafkaService implements OnModuleDestroy {
   private readonly logger = new Logger(KafkaService.name);
   private kafka: Kafka;
   private producer: Producer;
   private consumer: Consumer;
+  private readonly subscribedTopics = new Set<string>();
+  private readonly topicHandlers = new Map<string, KafkaMessageCallback<any>[]>();
+  private readonly replayConsumers: Consumer[] = [];
+  private connected = false;
+  private consumerRunning = false;
 
   private adminClient: Admin | null = null;
 
   constructor() {
+    const brokers = (process.env.KAFKA_BROKERS || 'kafka:9092')
+      .split(',')
+      .map((broker) => broker.trim())
+      .filter(Boolean);
     this.kafka = new Kafka({
-      brokers: ["kafka:9092"],
+      clientId: process.env.KAFKA_CLIENT_ID || 'nestjs-client',
+      brokers,
     });
     this.producer = this.kafka.producer();
-    this.consumer = this.kafka.consumer({ groupId: "nestjs-group" });
+    this.consumer = this.kafka.consumer({ groupId: process.env.KAFKA_GROUP_ID || 'nestjs-group' });
     this.adminClient = this.kafka.admin();
   }
 
   async connect() {
+    if (this.connected) {
+      return;
+    }
     await Promise.all([this.producer.connect(), this.consumer.connect()]);
+    this.connected = true;
   }
 
   private async isAdminConnected(): Promise<boolean> {
@@ -94,15 +117,21 @@ export class KafkaService implements OnModuleDestroy {
       return this.adminClient;
     }
   }
-  async sendMessage(topic: string, message: any) {
+  async sendMessage(topic: string, message: any, options?: KafkaPublishOptions) {
+    await this.connect();
+    const normalizedHeaders = Object.fromEntries(
+      Object.entries(options?.headers || {}).filter(([, value]) => value !== undefined && value !== null).map(([key, value]) => [key, String(value)])
+    );
     await this.producer.send({
       topic,
       messages: [
         {
+          key: options?.key,
           value: JSON.stringify(message),
           headers: {
             "event-type": message.constructor?.name || "unknown",
             timestamp: new Date().toISOString(),
+            ...normalizedHeaders,
           },
         },
       ],
@@ -111,17 +140,71 @@ export class KafkaService implements OnModuleDestroy {
 
   async subscribe<T = any>(
     topic: string | string[],
-    callback: KafkaMessageCallback<T>
+    callback: KafkaMessageCallback<T>,
+    options?: KafkaSubscribeOptions,
   ): Promise<void> {
-    await this.consumer.subscribe({
-      topics: Array.isArray(topic) ? topic : [topic],
-    });
+    await this.connect();
+    const topics = Array.isArray(topic) ? topic : [topic];
 
+    for (const currentTopic of topics) {
+      const handlers = this.topicHandlers.get(currentTopic) || [];
+      handlers.push(callback as KafkaMessageCallback<any>);
+      this.topicHandlers.set(currentTopic, handlers);
+
+      if (!this.subscribedTopics.has(currentTopic)) {
+        await this.consumer.subscribe({ topic: currentTopic, fromBeginning: options?.fromBeginning ?? false });
+        this.subscribedTopics.add(currentTopic);
+      }
+    }
+
+    if (this.consumerRunning) {
+      return;
+    }
+
+    this.consumerRunning = true;
     await this.consumer.run({
       eachMessage: async ({ topic, partition, message }) => {
         try {
           if (!message.value) return;
 
+          const parsedMessage: T = JSON.parse(message.value.toString());
+          const handlers = this.topicHandlers.get(topic) || [];
+          for (const handler of handlers) {
+            await handler(parsedMessage, {
+              topic,
+              partition,
+              offset: message.offset,
+              headers: message.headers,
+              timestamp: message.timestamp,
+            });
+          }
+        } catch (error) {
+          logger.error("Error processing Kafka message:", error);
+        }
+      },
+    });
+  }
+
+  async replayTopics<T = any>(
+    topic: string | string[],
+    callback: KafkaMessageCallback<T>
+  ): Promise<void> {
+    const topics = Array.isArray(topic) ? topic : [topic];
+    const replayConsumer = this.kafka.consumer({
+      groupId: (process.env.KAFKA_GROUP_ID || 'nestjs-group') + '-replay-' + Date.now(),
+    });
+
+    await replayConsumer.connect();
+    this.replayConsumers.push(replayConsumer);
+
+    for (const currentTopic of topics) {
+      await replayConsumer.subscribe({ topic: currentTopic, fromBeginning: true });
+    }
+
+    await replayConsumer.run({
+      eachMessage: async ({ topic, partition, message }) => {
+        try {
+          if (!message.value) return;
           const parsedMessage: T = JSON.parse(message.value.toString());
           await callback(parsedMessage, {
             topic,
@@ -131,8 +214,7 @@ export class KafkaService implements OnModuleDestroy {
             timestamp: message.timestamp,
           });
         } catch (error) {
-          logger.error("Error processing Kafka message:", error);
-          // Aquí puedes agregar lógica de reintento o dead-letter queue
+          logger.error('Error replaying Kafka message:', error);
         }
       },
     });
@@ -143,7 +225,14 @@ export class KafkaService implements OnModuleDestroy {
   }
 
   async disconnect() {
-    await Promise.all([this.producer.disconnect(), this.consumer.disconnect()]);
+    this.connected = false;
+    this.consumerRunning = false;
+    await Promise.all([
+      this.producer.disconnect(),
+      this.consumer.disconnect(),
+      ...this.replayConsumers.map((consumer) => consumer.disconnect().catch(() => undefined)),
+    ]);
+    this.replayConsumers.length = 0;
   }
 }
 

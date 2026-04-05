@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2025 SoftwarEnTalla
+ * Copyright (c) 2026 SoftwarEnTalla
  * Licencia: MIT
  * Contacto: softwarentalla@gmail.com
  * CEOs: 
@@ -32,13 +32,22 @@
 import { Module, OnModuleInit, Logger } from "@nestjs/common";
 import { CqrsModule } from "@nestjs/cqrs";
 import { KafkaService } from "../shared/messaging/kafka.service";
+import { KafkaAdminService } from "../shared/messaging/kafka-admin.service";
+import { EventIdempotencyService } from "../shared/messaging/event-idempotency.service";
+import { KafkaDeadLetterService } from "../shared/messaging/kafka-dead-letter.service";
+import { ProjectionReplayService } from "../shared/messaging/projection-replay.service";
 import { KafkaEventPublisher } from "../shared/adapters/kafka-event-publisher";
 import { KafkaEventSubscriber } from "../shared/adapters/kafka-event-subscriber";
+import { EVENT_ADMIN_TOPICS } from "../events/event-registry";
 
 @Module({
   imports: [CqrsModule],
   providers: [
     KafkaService,
+    KafkaAdminService,
+    EventIdempotencyService,
+    KafkaDeadLetterService,
+    ProjectionReplayService,
     KafkaEventPublisher,
     KafkaEventSubscriber,
     {
@@ -46,40 +55,44 @@ import { KafkaEventSubscriber } from "../shared/adapters/kafka-event-subscriber"
       useExisting: KafkaEventPublisher,
     },
   ],
-  exports: [KafkaService, KafkaEventPublisher, KafkaEventSubscriber],
+  exports: [KafkaService, KafkaAdminService, EventIdempotencyService, KafkaDeadLetterService, ProjectionReplayService, KafkaEventPublisher, KafkaEventSubscriber],
 })
 export class KafkaModule implements OnModuleInit {
   private readonly logger = new Logger(KafkaModule.name);
 
   constructor(
     private readonly kafkaSubscriber: KafkaEventSubscriber,
-    private readonly kafkaService: KafkaService
+    private readonly kafkaService: KafkaService,
+    private readonly kafkaAdminService: KafkaAdminService
   ) {}
 
   async onModuleInit() {
+    if (process.env.KAFKA_ENABLED !== 'true') {
+      this.logger.warn('Kafka deshabilitado por configuración. Se omite inicialización del módulo Kafka.');
+      return;
+    }
+    void this.bootstrapKafka();
+  }
+
+  private async bootstrapKafka(attempt: number = 1, maxRetries: number = 10): Promise<void> {
     try {
       this.logger.log("Initializing Kafka module...");
 
-      // 1. Conectar a Kafka primero
       await this.kafkaService.connect();
       this.logger.log("Successfully connected to Kafka");
 
-      // 2. Inicializar el suscriptor de eventos
-      await this.kafkaSubscriber.onModuleInit();
+  await this.kafkaAdminService.ensureTopics(EVENT_ADMIN_TOPICS);
+      this.logger.log("Kafka topics are ready");
+
+      await this.kafkaSubscriber.initializeSubscriptions();
       this.logger.log("Kafka event subscribers initialized");
 
-      // 3. Opcional: Verificar conexión con un ping
       await this.verifyKafkaConnection();
 
       this.logger.log("Kafka module initialized successfully");
     } catch (error: any) {
       this.logger.error("Failed to initialize Kafka module", error.stack);
-
-      // Implementar estrategia de reintento si es necesario
-      await this.handleInitializationError(error);
-
-      // Relanzar el error para que NestJS lo maneje
-      throw error;
+      this.scheduleKafkaRecovery(attempt, maxRetries);
     }
   }
 
@@ -99,27 +112,22 @@ export class KafkaModule implements OnModuleInit {
     }
   }
 
-  private async handleInitializationError(error: any): Promise<void> {
-    const maxRetries = 3;
-    const retryDelay = 5000; // 5 segundos
-
-    for (let attempt = 1; attempt <= maxRetries; attempt++) {
-      this.logger.warn(
-        `Retrying Kafka initialization (attempt ${attempt}/${maxRetries})...`
-      );
-
-      try {
-        await new Promise((resolve) => setTimeout(resolve, retryDelay));
-        await this.kafkaService.connect();
-        await this.kafkaSubscriber.onModuleInit();
-        this.logger.log("Kafka module recovered after retry");
-        return;
-      } catch (retryError: any) {
-        this.logger.warn(`Retry attempt ${attempt} failed`, retryError.message);
-      }
+  private scheduleKafkaRecovery(attempt: number, maxRetries: number = 10): void {
+    const retryDelay = 5000;
+    if (attempt > maxRetries) {
+      this.logger.error('All ' + maxRetries + ' Kafka initialization retries failed');
+      return;
     }
 
-    this.logger.error(`All ${maxRetries} initialization retries failed`);
+    setTimeout(async () => {
+      this.logger.warn('Retrying Kafka initialization (attempt ' + attempt + '/' + maxRetries + ')...');
+      try {
+        await this.bootstrapKafka(attempt + 1, maxRetries);
+      } catch (retryError: any) {
+        this.logger.warn('Retry attempt ' + attempt + ' failed: ' + retryError.message);
+        this.scheduleKafkaRecovery(attempt + 1, maxRetries);
+      }
+    }, retryDelay);
   }
 }
 

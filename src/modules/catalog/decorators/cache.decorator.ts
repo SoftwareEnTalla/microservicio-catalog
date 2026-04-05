@@ -2,7 +2,7 @@
 import { Inject, Logger } from "@nestjs/common";
 import { CACHE_MANAGER } from "@nestjs/cache-manager";
 import { v4 as uuidv4 } from "uuid";
-import { CacheOptions, CacheableContext } from "../../../interfaces/cacheable";
+import { CacheOptions, CacheableContext } from "src/interfaces/cacheable";
 
 export function Cacheable(options: CacheOptions) {
   const injectCache = Inject(CACHE_MANAGER);

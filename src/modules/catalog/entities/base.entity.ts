@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2025 SoftwarEnTalla
+ * Copyright (c) 2026 SoftwarEnTalla
  * Licencia: MIT
  * Contacto: softwarentalla@gmail.com
  * CEOs: 
@@ -46,6 +46,17 @@ export abstract class BaseEntity {
   })
   @Field(() => String, { description: "Identificador único de la instancia de Catalog", nullable: false })
   id!: string;
+
+  @ApiProperty({
+      type: String,
+      nullable: false,
+      description: "Columna discriminadora de la instancia de Catalog",
+  })
+  @Field(() => String, { description: "🔹 Columna discriminadora de la instancia de Catalog", nullable: false })
+  @Column({ type: 'varchar', length: 100, nullable: false,comment: 'Este es para discriminar en las instancias de Catalog' })
+  @IsString()
+  @IsOptional()
+  type!: string;
 
 
   @ApiProperty({

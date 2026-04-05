@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2025 SoftwarEnTalla
+ * Copyright (c) 2026 SoftwarEnTalla
  * Licencia: MIT
  * Contacto: softwarentalla@gmail.com
  * CEOs: 
@@ -41,8 +41,18 @@ import { CatalogResolver } from "../graphql/catalog.resolver";
 import { CatalogAuthGuard } from "../guards/catalogauthguard.guard";
 import { TypeOrmModule } from "@nestjs/typeorm";
 import { Catalog } from "../entities/catalog.entity";
-import { CommandBus, EventBus, UnhandledExceptionBus } from "@nestjs/cqrs";
+import { BaseEntity } from "../entities/base.entity";
 import { CacheModule } from "@nestjs/cache-manager";
+import { CqrsModule } from "@nestjs/cqrs";
+import { KafkaModule } from "./kafka.module";
+import { CreateCatalogHandler } from "../commands/handlers/createcatalog.handler";
+import { UpdateCatalogHandler } from "../commands/handlers/updatecatalog.handler";
+import { DeleteCatalogHandler } from "../commands/handlers/deletecatalog.handler";
+import { GetCatalogByIdHandler } from "../queries/handlers/getcatalogbyid.handler";
+import { GetCatalogByFieldHandler } from "../queries/handlers/getcatalogbyfield.handler";
+import { GetAllCatalogHandler } from "../queries/handlers/getallcatalog.handler";
+import { CatalogCrudSaga } from "../sagas/catalog-crud.saga";
+import { EVENT_TOPICS } from "../events/event-registry";
 
 //Interceptors
 import { CatalogInterceptor } from "../interceptors/catalog.interceptor";
@@ -50,19 +60,18 @@ import { CatalogLoggingInterceptor } from "../interceptors/catalog.logging.inter
 
 //Event-Sourcing dependencies
 import { EventStoreService } from "../shared/event-store/event-store.service";
-import { KafkaEventPublisher } from "../shared/adapters/kafka-event-publisher";
-import { KafkaService } from "../shared/messaging/kafka.service";
 
 @Module({
   imports: [
-    TypeOrmModule.forFeature([Catalog]), // Asegúrate de incluir esto
+    CqrsModule,
+    KafkaModule,
+    TypeOrmModule.forFeature([BaseEntity, Catalog]), // Incluir BaseEntity para herencia
     CacheModule.register(), // Importa el módulo de caché
   ],
   controllers: [CatalogCommandController, CatalogQueryController],
   providers: [
     //Services
     EventStoreService,
-    KafkaService,
     CatalogQueryService,
     CatalogCommandService,
     //Repositories
@@ -76,17 +85,32 @@ import { KafkaService } from "../shared/messaging/kafka.service";
     //Interceptors
     CatalogInterceptor,
     CatalogLoggingInterceptor,
-    //Publishers
-    KafkaEventPublisher,
-    //Others dependencies
-    UnhandledExceptionBus, // Manejador global de excepciones
-    CommandBus, // Bus de comandos
-    EventBus, // Bus de eventos
+    //CQRS Handlers
+    CreateCatalogHandler,
+    UpdateCatalogHandler,
+    DeleteCatalogHandler,
+    GetCatalogByIdHandler,
+    GetCatalogByFieldHandler,
+    GetAllCatalogHandler,
+    CatalogCrudSaga,
+    //Configurations
+    {
+      provide: 'EVENT_SOURCING_CONFIG',
+      useFactory: () => ({
+        enabled: process.env.EVENT_SOURCING_ENABLED !== 'false',
+        kafkaEnabled: process.env.KAFKA_ENABLED !== 'false',
+        eventStoreEnabled: process.env.EVENT_STORE_ENABLED === 'true',
+        publishEvents: true,
+        useProjections: true,
+        topics: EVENT_TOPICS
+      })
+    },
   ],
   exports: [
+    CqrsModule,
+    KafkaModule,
     //Services
     EventStoreService,
-    KafkaService,
     CatalogQueryService,
     CatalogCommandService,
     //Repositories
@@ -100,12 +124,6 @@ import { KafkaService } from "../shared/messaging/kafka.service";
     //Interceptors
     CatalogInterceptor,
     CatalogLoggingInterceptor,
-    //Publishers
-    KafkaEventPublisher,
-    //Others dependencies
-    UnhandledExceptionBus, // Manejador global de excepciones
-    CommandBus, // Bus de comandos
-    EventBus, // Bus de eventos
   ],
 })
 export class CatalogModule {}

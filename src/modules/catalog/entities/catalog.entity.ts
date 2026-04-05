@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2025 SoftwarEnTalla
+ * Copyright (c) 2026 SoftwarEnTalla
  * Licencia: MIT
  * Contacto: softwarentalla@gmail.com
  * CEOs: 
@@ -28,111 +28,91 @@
  *
  */
 
-
-import { Column, Entity } from 'typeorm';
+import { Column, Entity, OneToOne, JoinColumn, ChildEntity, ManyToOne, OneToMany, ManyToMany, JoinTable, Index, Check, Unique } from 'typeorm';
 import { BaseEntity } from './base.entity';
-import { CreateCatalogDto,UpdateCatalogDto,DeleteCatalogDto } from '../dtos/all-dto';
- 
-import { IsNotEmpty, IsString, validate } from 'class-validator';
-import { plainToClass, plainToInstance } from 'class-transformer';
+import { CreateCatalogDto, UpdateCatalogDto, DeleteCatalogDto } from '../dtos/all-dto';
+import { IsBoolean, IsDate, IsInt, IsNotEmpty, IsNumber, IsObject, IsOptional, IsString, IsUUID } from 'class-validator';
 import { ApiProperty } from '@nestjs/swagger';
-import { Field, ObjectType } from "@nestjs/graphql";
+import { Field, Float, Int, ObjectType } from "@nestjs/graphql";
+import { plainToInstance } from 'class-transformer';
 
+
+
+@ChildEntity('catalog')
 @ObjectType()
-@Entity('catalog')
 export class Catalog extends BaseEntity {
-
-  // Propiedades de Catalog
   @ApiProperty({
-      type: String,
-      nullable: false,
-      description: "Nombre de la instancia de Catalog",
+    type: String,
+    nullable: false,
+    description: "Nombre de la instancia de Catalog",
   })
   @IsString()
   @IsNotEmpty()
   @Field(() => String, { description: "Nombre de la instancia de Catalog", nullable: false })
-  @Column({ type: 'varchar', length: 100, nullable: false,comment: 'Este es un campo para nombrar la instancia Catalog' })
-  private name!: string ;
+  @Column({ type: 'varchar', length: 100, nullable: false, comment: 'Este es un campo para nombrar la instancia Catalog' })
+  private name!: string;
 
   @ApiProperty({
-      type: String,
-      nullable: false,
-      description: "Descripción de la instancia de Catalog",
+    type: String,
+    description: "Descripción de la instancia de Catalog",
   })
   @IsString()
   @IsNotEmpty()
   @Field(() => String, { description: "Descripción de la instancia de Catalog", nullable: false })
-  @Column({ type: 'varchar', length: 255, nullable: false,default: "Sin descripción",comment: 'Este es un campo para describir la instancia Catalog' })
-  private description!: string ;
+  @Column({ type: 'varchar', length: 255, nullable: false, default: "Sin descripción", comment: 'Este es un campo para describir la instancia Catalog' })
+  private description!: string;
 
-  // Constructor de Catalog
+
+
+  protected executeDslLifecycle(): void {
+
+  }
+
+  // Relación con BaseEntity (opcional, si aplica)
+  // @OneToOne(() => BaseEntity, { cascade: true })
+  // @JoinColumn()
+  // base!: BaseEntity;
+
   constructor() {
     super();
+    this.type = 'catalog';
   }
-  
-  // Getters y Setters
 
+  // Getters y Setters
   get getName(): string {
     return this.name;
   }
-
   set setName(value: string) {
     this.name = value;
   }
-
-   get getDescription(): string {
+  get getDescription(): string {
     return this.description;
   }
 
-  set setDescription(value: string) {
-    this.description = value;
+  // Métodos abstractos implementados
+  async create(data: any): Promise<BaseEntity> {
+    Object.assign(this, data);
+    this.executeDslLifecycle();
+    this.modificationDate = new Date();
+    return this;
+  }
+  async update(data: any): Promise<BaseEntity> {
+    Object.assign(this, data);
+    this.executeDslLifecycle();
+    this.modificationDate = new Date();
+    return this;
+  }
+  async delete(id: string): Promise<BaseEntity> {
+    this.id = id;
+    return this;
   }
 
-  //Métodos o funciones de Catalog
-
-  static fromDto(dto:CreateCatalogDto|UpdateCatalogDto|DeleteCatalogDto):Catalog{
-       return plainToClass(Catalog, dto);
+  // Método estático para convertir DTOs a entidad con sobrecarga
+  static fromDto(dto: CreateCatalogDto): Catalog;
+  static fromDto(dto: UpdateCatalogDto): Catalog;
+  static fromDto(dto: DeleteCatalogDto): Catalog;
+  static fromDto(dto: any): Catalog {
+    // plainToInstance soporta todos los DTOs
+    return plainToInstance(Catalog, dto);
   }
-
-  //Implementación de Métodos abstractos de la clase padre
-  async create(data: any): Promise<Catalog> {
-
-    // Verifica si data es un array y toma el primer objeto si es necesario
-    const singleData = Array.isArray(data) ? data[0] : data;  // Si es un array, tomamos el primer objeto
-
-    // Convertir el objeto data a una instancia del DTO
-    const catalogDto = plainToInstance(CreateCatalogDto, data as CreateCatalogDto);
-
-    // Validar el DTO
-    const errors = await validate(catalogDto);
-    if (errors.length > 0) {
-      throw new Error('Validation failed creating catalog!'); // Manejo de errores de validación
-    }
-    // Asignar la fecha de modificación
-    catalogDto.modificationDate = new Date();
-    return {...this,...catalogDto};
-  }
-  async update(data: any): Promise<Catalog>{
-
-    // Verifica si data es un array y toma el primer objeto si es necesario
-    const singleData = Array.isArray(data) ? data[0] : data;  // Si es un array, tomamos el primer objeto
-
-
-    // Convertir el objeto data a una instancia del DTO
-    const catalogDto = plainToInstance(CreateCatalogDto, singleData as CreateCatalogDto);
-
-
-    // Validar el DTO
-    const errors = await validate(catalogDto);
-    if (errors.length > 0) {
-      throw new Error('Validation failed creating catalog!'); // Manejo de errores de validación
-    }
-    // Asignar la fecha de modificación
-    catalogDto.modificationDate = new Date();
-    return {...this,...catalogDto};
-  }
-  async delete():  Promise<Catalog>{
-    return {...this};
-  }
-
 }
