@@ -26,6 +26,7 @@
 | |____tda
 | |____types
 |____database
+|____docs
 |____errors
 |____filters
 |____i18n
