@@ -53,7 +53,7 @@ import { IEventHandler, EventsHandler } from '@nestjs/cqrs';
 import { CatalogTranslationCreatedEvent } from '../events/catalogtranslationcreated.event';
 import { CatalogTranslationUpdatedEvent } from '../events/catalogtranslationupdated.event';
 import { CatalogTranslationDeletedEvent } from '../events/catalogtranslationdeleted.event';
-
+import { CatalogTranslationUpsertedEvent } from "../events/catalogtranslationupserted.event";
 
 //Enfoque Event Sourcing
 import { CommandBus, EventBus } from '@nestjs/cqrs';
@@ -66,7 +66,7 @@ import { EventSourcingHelper } from '../shared/decorators/event-sourcing.helper'
 import { EventSourcingConfigOptions } from '../shared/decorators/event-sourcing.decorator';
 
 
-@EventsHandler(CatalogTranslationCreatedEvent, CatalogTranslationUpdatedEvent, CatalogTranslationDeletedEvent)
+@EventsHandler(CatalogTranslationCreatedEvent, CatalogTranslationUpdatedEvent, CatalogTranslationDeletedEvent, CatalogTranslationUpsertedEvent)
 @Injectable()
 export class CatalogTranslationCommandRepository implements IEventHandler<BaseEvent>{
 
@@ -158,7 +158,8 @@ export class CatalogTranslationCommandRepository implements IEventHandler<BaseEv
         return await this.onCatalogTranslationUpdated(event);
       case 'CatalogTranslationDeletedEvent':
         return await this.onCatalogTranslationDeleted(event);
-
+      case 'CatalogTranslationUpsertedEvent':
+        return await this.onCatalogTranslationUpserted(event);
     }
     return false;
   }
@@ -252,6 +253,19 @@ export class CatalogTranslationCommandRepository implements IEventHandler<BaseEv
     return await this.repository.delete(event.aggregateId);
   }
 
+  private async onCatalogTranslationUpserted(event: CatalogTranslationUpsertedEvent) {
+    logger.info('Ready to handle onCatalogTranslationUpserted event on repository:', event);
+    const payloadInstance = (event as any).payload?.instance;
+    if (payloadInstance) {
+      const projectedEntity = this.repository.create({
+        ...(payloadInstance as any),
+        id: event.aggregateId,
+        type: 'catalog-translation'
+      } as Partial<CatalogTranslation>);
+      return await this.repository.save(projectedEntity as CatalogTranslation);
+    }
+    return true;
+  }
 
 
   // ----------------------------

@@ -36,7 +36,7 @@ import {
   CatalogTranslationCreatedEvent,
   CatalogTranslationUpdatedEvent,
   CatalogTranslationDeletedEvent,
-
+  CatalogTranslationUpsertedEvent,
 } from '../events/exporting.event';
 import {
   SagaCatalogTranslationFailedEvent
@@ -100,6 +100,16 @@ export class CatalogTranslationCrudSaga {
     );
   };
 
+  @Saga()
+  onCatalogTranslationUpserted = ($events: Observable<CatalogTranslationUpsertedEvent>) => {
+    return $events.pipe(
+      ofType(CatalogTranslationUpsertedEvent),
+      tap(event => {
+        this.logger.log(`Saga iniciada para evento de dominio CatalogTranslationUpserted: ${event.aggregateId}`);
+      }),
+      map(() => null)
+    );
+  };
 
   @LogExecutionTime({
     layer: 'saga',

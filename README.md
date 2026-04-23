@@ -1,6 +1,6 @@
 # CATALOG Microservice
 
-**Creation Date**: 2026-04-21
+**Creation Date**: 2026-04-22
 
 **Author**: Ing. Persy Morell Guerra e Ing. Dailyn García Dominguez (SoftwarEnTalla CEO)
 
@@ -59,6 +59,7 @@
 | | | |____event-store
 | | | |____messaging
 | | |____types
+| |____catalog-client
 | |____catalog-item
 | |____catalog-item-history
 | | |____aggregates

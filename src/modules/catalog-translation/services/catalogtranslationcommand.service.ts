@@ -51,7 +51,7 @@ import { KafkaEventPublisher } from "../shared/adapters/kafka-event-publisher";
 import { ModuleRef } from "@nestjs/core";
 import { CatalogTranslationQueryService } from "./catalogtranslationquery.service";
 import { BaseEvent } from "../events/base.event";
-
+import { CatalogTranslationUpsertedEvent } from '../events/catalogtranslationupserted.event';
 
 @Injectable()
 export class CatalogTranslationCommandService implements OnModuleInit {

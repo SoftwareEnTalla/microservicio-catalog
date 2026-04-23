@@ -30,7 +30,7 @@
 export * from "./catalogtranslationdeleted.event"; 
 export * from "./catalogtranslationcreated.event";
 export * from "./catalogtranslationupdated.event";
-
+export * from "./catalogtranslationupserted.event";
 export * from "./event-registry";
 export * from "./base.event";
 export * from "./catalogtranslation-failed.event";

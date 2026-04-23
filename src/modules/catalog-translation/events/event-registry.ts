@@ -33,6 +33,7 @@ import { BaseEvent } from './base.event';
 import { CatalogTranslationCreatedEvent } from './catalogtranslationcreated.event';
 import { CatalogTranslationUpdatedEvent } from './catalogtranslationupdated.event';
 import { CatalogTranslationDeletedEvent } from './catalogtranslationdeleted.event';
+import { CatalogTranslationUpsertedEvent } from './catalogtranslationupserted.event';
 
 export type RegisteredEventClass<T extends BaseEvent = BaseEvent> = new (
   aggregateId: string,
@@ -82,7 +83,7 @@ export const EVENT_DEFINITIONS: Record<string, RegisteredEventDefinition> = {
   'catalog-translation-created': createEventDefinition('catalog-translation-created', CatalogTranslationCreatedEvent, EVENT_DEFINITION_OVERRIDES['catalog-translation-created']),
   'catalog-translation-updated': createEventDefinition('catalog-translation-updated', CatalogTranslationUpdatedEvent, EVENT_DEFINITION_OVERRIDES['catalog-translation-updated']),
   'catalog-translation-deleted': createEventDefinition('catalog-translation-deleted', CatalogTranslationDeletedEvent, EVENT_DEFINITION_OVERRIDES['catalog-translation-deleted']),
-
+  'catalog-translation-upserted': createEventDefinition('catalog-translation-upserted', CatalogTranslationUpsertedEvent, EVENT_DEFINITION_OVERRIDES['catalog-translation-upserted']),
 };
 
 export const EVENT_REGISTRY: Record<string, RegisteredEventClass> = Object.fromEntries(
