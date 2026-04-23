@@ -30,7 +30,7 @@
 export * from "./catalogcategorydeleted.event"; 
 export * from "./catalogcategorycreated.event";
 export * from "./catalogcategoryupdated.event";
-
+export * from "./catalogcategorydeprecated.event";
 export * from "./event-registry";
 export * from "./base.event";
 export * from "./catalogcategory-failed.event";

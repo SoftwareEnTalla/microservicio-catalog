@@ -53,7 +53,7 @@ import { IEventHandler, EventsHandler } from '@nestjs/cqrs';
 import { CatalogCategoryCreatedEvent } from '../events/catalogcategorycreated.event';
 import { CatalogCategoryUpdatedEvent } from '../events/catalogcategoryupdated.event';
 import { CatalogCategoryDeletedEvent } from '../events/catalogcategorydeleted.event';
-
+import { CatalogCategoryDeprecatedEvent } from "../events/catalogcategorydeprecated.event";
 
 //Enfoque Event Sourcing
 import { CommandBus, EventBus } from '@nestjs/cqrs';
@@ -66,7 +66,7 @@ import { EventSourcingHelper } from '../shared/decorators/event-sourcing.helper'
 import { EventSourcingConfigOptions } from '../shared/decorators/event-sourcing.decorator';
 
 
-@EventsHandler(CatalogCategoryCreatedEvent, CatalogCategoryUpdatedEvent, CatalogCategoryDeletedEvent)
+@EventsHandler(CatalogCategoryCreatedEvent, CatalogCategoryUpdatedEvent, CatalogCategoryDeletedEvent, CatalogCategoryDeprecatedEvent)
 @Injectable()
 export class CatalogCategoryCommandRepository implements IEventHandler<BaseEvent>{
 
@@ -158,7 +158,8 @@ export class CatalogCategoryCommandRepository implements IEventHandler<BaseEvent
         return await this.onCatalogCategoryUpdated(event);
       case 'CatalogCategoryDeletedEvent':
         return await this.onCatalogCategoryDeleted(event);
-
+      case 'CatalogCategoryDeprecatedEvent':
+        return await this.onCatalogCategoryDeprecated(event);
     }
     return false;
   }
@@ -252,6 +253,19 @@ export class CatalogCategoryCommandRepository implements IEventHandler<BaseEvent
     return await this.repository.delete(event.aggregateId);
   }
 
+  private async onCatalogCategoryDeprecated(event: CatalogCategoryDeprecatedEvent) {
+    logger.info('Ready to handle onCatalogCategoryDeprecated event on repository:', event);
+    const payloadInstance = (event as any).payload?.instance;
+    if (payloadInstance) {
+      const projectedEntity = this.repository.create({
+        ...(payloadInstance as any),
+        id: event.aggregateId,
+        type: 'catalog-category'
+      } as Partial<CatalogCategory>);
+      return await this.repository.save(projectedEntity as CatalogCategory);
+    }
+    return true;
+  }
 
 
   // ----------------------------

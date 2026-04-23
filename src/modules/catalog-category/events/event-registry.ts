@@ -33,6 +33,7 @@ import { BaseEvent } from './base.event';
 import { CatalogCategoryCreatedEvent } from './catalogcategorycreated.event';
 import { CatalogCategoryUpdatedEvent } from './catalogcategoryupdated.event';
 import { CatalogCategoryDeletedEvent } from './catalogcategorydeleted.event';
+import { CatalogCategoryDeprecatedEvent } from './catalogcategorydeprecated.event';
 
 export type RegisteredEventClass<T extends BaseEvent = BaseEvent> = new (
   aggregateId: string,
@@ -87,7 +88,7 @@ export const EVENT_DEFINITIONS: Record<string, RegisteredEventDefinition> = {
   'catalog-category-created': createEventDefinition('catalog-category-created', CatalogCategoryCreatedEvent, EVENT_DEFINITION_OVERRIDES['catalog-category-created']),
   'catalog-category-updated': createEventDefinition('catalog-category-updated', CatalogCategoryUpdatedEvent, EVENT_DEFINITION_OVERRIDES['catalog-category-updated']),
   'catalog-category-deleted': createEventDefinition('catalog-category-deleted', CatalogCategoryDeletedEvent, EVENT_DEFINITION_OVERRIDES['catalog-category-deleted']),
-
+  'catalog-category-deprecated': createEventDefinition('catalog-category-deprecated', CatalogCategoryDeprecatedEvent, EVENT_DEFINITION_OVERRIDES['catalog-category-deprecated']),
 };
 
 export const EVENT_REGISTRY: Record<string, RegisteredEventClass> = Object.fromEntries(

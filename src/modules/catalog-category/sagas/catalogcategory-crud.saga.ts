@@ -36,7 +36,7 @@ import {
   CatalogCategoryCreatedEvent,
   CatalogCategoryUpdatedEvent,
   CatalogCategoryDeletedEvent,
-
+  CatalogCategoryDeprecatedEvent,
 } from '../events/exporting.event';
 import {
   SagaCatalogCategoryFailedEvent
@@ -100,6 +100,16 @@ export class CatalogCategoryCrudSaga {
     );
   };
 
+  @Saga()
+  onCatalogCategoryDeprecated = ($events: Observable<CatalogCategoryDeprecatedEvent>) => {
+    return $events.pipe(
+      ofType(CatalogCategoryDeprecatedEvent),
+      tap(event => {
+        this.logger.log(`Saga iniciada para evento de dominio CatalogCategoryDeprecated: ${event.aggregateId}`);
+      }),
+      map(() => null)
+    );
+  };
 
   @LogExecutionTime({
     layer: 'saga',
