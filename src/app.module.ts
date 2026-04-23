@@ -47,6 +47,10 @@ import { LoggingModule } from "./modules/catalog/modules/logger.module";
 import { ModuleRef } from "@nestjs/core";
 import { ServiceRegistry } from "@core/service-registry";
 import LoggerService, { logger } from "@core/logs/logger";
+import { CatalogItemHistoryModule } from "./modules/catalog-item-history/modules/catalogitemhistory.module";
+import { CatalogCategoryModule } from "./modules/catalog-category/modules/catalogcategory.module";
+import { CatalogTranslationModule } from "./modules/catalog-translation/modules/catalogtranslation.module";
+import { CatalogItemModule } from "./modules/catalog-item/modules/catalogitem.module";
 
 
 //import GraphQLJSON from "graphql-type-json";
@@ -117,6 +121,10 @@ import LoggerService, { logger } from "@core/logs/logger";
     /**
      * Módulo Logger de la aplicación
      */
+        CatalogItemHistoryModule,
+    CatalogCategoryModule,
+    CatalogTranslationModule,
+    CatalogItemModule,
     LoggingModule,
 
     // GraphQL solo si GRAPHQL_ENABLED=true

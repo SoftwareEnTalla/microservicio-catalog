@@ -229,13 +229,7 @@ export class CatalogItemQueryService implements OnModuleInit{
     paginationArgs?: PaginationArgs
   ): Promise<CatalogItemsResponse<CatalogItem>> {
     try {
-      const [entities, lenght] = await this.repository.findAndCount({
-        where: { [field]: value },
-        skip:
-          ((paginationArgs ? paginationArgs.page : 1) - 1) *
-          (paginationArgs ? paginationArgs.size : 25),
-        take: paginationArgs ? paginationArgs.size : 25,
-      });
+      const [entities, lenght] = await this.repository.findAndCount({ [field]: value });
 
       // Respuesta si el catalogitem no existe
       if (!entities)
@@ -359,9 +353,7 @@ export class CatalogItemQueryService implements OnModuleInit{
     paginationArgs?: PaginationArgs
   ): Promise<CatalogItemsResponse<CatalogItem>> {
     try {
-      const [entities, lenght] = await this.repository.findAndCount({
-        where: where,
-      });
+      const [entities, lenght] = await this.repository.findAndCount(where);
 
       // Respuesta si el catalogitem no existe
       if (!entities)
@@ -411,9 +403,7 @@ export class CatalogItemQueryService implements OnModuleInit{
   })
   async findOne(where?: Record<string, any>): Promise<CatalogItemResponse<CatalogItem>> {
     try {
-      const entity = await this.repository.findOne({
-        where: where,
-      });
+      const entity = await this.repository.findOne(where);
 
       // Respuesta si el catalogitem no existe
       if (!entity)
@@ -455,9 +445,7 @@ export class CatalogItemQueryService implements OnModuleInit{
     where?: Record<string, any>
   ): Promise<CatalogItemResponse<CatalogItem> | Error> {
     try {
-      const entity = await this.repository.findOne({
-        where: where,
-      });
+      const entity = await this.repository.findOne(where);
 
       // Respuesta si el catalogitem no existe
       if (!entity)

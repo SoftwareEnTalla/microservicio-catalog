@@ -272,15 +272,19 @@ import { logger } from '@core/logs/logger';
       .registerClient(CatalogRepository.name)
       .get(CatalogRepository.name),
     })
-    async findOne(where?: Record<string, any>): Promise<Catalog | null> {
-      const tmp: FindOptionsWhere<Catalog> = where as FindOptionsWhere<Catalog>;
-      logger.info('Ready to findOneBy Catalog on repository with conditions:', tmp);
-      // Si 'where' es undefined o null, puedes manejarlo según tu lógica
-      if (!where) {
+        async findOne(options?: Record<string, any>): Promise<Catalog | null> {
+      if (!options || Object.keys(options).length === 0) {
         logger.warn('No conditions provided for finding Catalog.');
-        return null; // O maneja el caso como prefieras
+        return null;
       }
-      logger.info('Ready to findOneBy Catalog on repository:',tmp);
+      // Soporta tanto 'where plano' como FindOneOptions ({ where, relations, order, select })
+      const isFindOneOptions = 'where' in options || 'relations' in options || 'order' in options || 'select' in options;
+      if (isFindOneOptions) {
+        logger.info('Ready to findOne (FindOneOptions) Catalog:', options);
+        return this.repository.findOne(options as any);
+      }
+      const tmp: FindOptionsWhere<Catalog> = options as FindOptionsWhere<Catalog>;
+      logger.info('Ready to findOneBy Catalog on repository:', tmp);
       return this.repository.findOneBy(tmp);
     }
 
