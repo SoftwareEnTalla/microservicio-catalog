@@ -51,7 +51,10 @@ import { KafkaEventPublisher } from "../shared/adapters/kafka-event-publisher";
 import { ModuleRef } from "@nestjs/core";
 import { CatalogItemQueryService } from "./catalogitemquery.service";
 import { BaseEvent } from "../events/base.event";
-
+import { CatalogItemUpsertedEvent } from '../events/catalogitemupserted.event';
+import { CatalogItemDeprecatedEvent } from '../events/catalogitemdeprecated.event';
+import { CatalogItemArchivedEvent } from '../events/catalogitemarchived.event';
+import { CatalogBulkImportedEvent } from '../events/catalogbulkimported.event';
 
 @Injectable()
 export class CatalogItemCommandService implements OnModuleInit {

@@ -53,7 +53,10 @@ import { IEventHandler, EventsHandler } from '@nestjs/cqrs';
 import { CatalogItemCreatedEvent } from '../events/catalogitemcreated.event';
 import { CatalogItemUpdatedEvent } from '../events/catalogitemupdated.event';
 import { CatalogItemDeletedEvent } from '../events/catalogitemdeleted.event';
-
+import { CatalogItemUpsertedEvent } from "../events/catalogitemupserted.event";
+import { CatalogItemDeprecatedEvent } from "../events/catalogitemdeprecated.event";
+import { CatalogItemArchivedEvent } from "../events/catalogitemarchived.event";
+import { CatalogBulkImportedEvent } from "../events/catalogbulkimported.event";
 
 //Enfoque Event Sourcing
 import { CommandBus, EventBus } from '@nestjs/cqrs';
@@ -66,7 +69,7 @@ import { EventSourcingHelper } from '../shared/decorators/event-sourcing.helper'
 import { EventSourcingConfigOptions } from '../shared/decorators/event-sourcing.decorator';
 
 
-@EventsHandler(CatalogItemCreatedEvent, CatalogItemUpdatedEvent, CatalogItemDeletedEvent)
+@EventsHandler(CatalogItemCreatedEvent, CatalogItemUpdatedEvent, CatalogItemDeletedEvent, CatalogItemUpsertedEvent, CatalogItemDeprecatedEvent, CatalogItemArchivedEvent, CatalogBulkImportedEvent)
 @Injectable()
 export class CatalogItemCommandRepository implements IEventHandler<BaseEvent>{
 
@@ -158,7 +161,14 @@ export class CatalogItemCommandRepository implements IEventHandler<BaseEvent>{
         return await this.onCatalogItemUpdated(event);
       case 'CatalogItemDeletedEvent':
         return await this.onCatalogItemDeleted(event);
-
+      case 'CatalogItemUpsertedEvent':
+        return await this.onCatalogItemUpserted(event);
+      case 'CatalogItemDeprecatedEvent':
+        return await this.onCatalogItemDeprecated(event);
+      case 'CatalogItemArchivedEvent':
+        return await this.onCatalogItemArchived(event);
+      case 'CatalogBulkImportedEvent':
+        return await this.onCatalogBulkImported(event);
     }
     return false;
   }
@@ -252,6 +262,61 @@ export class CatalogItemCommandRepository implements IEventHandler<BaseEvent>{
     return await this.repository.delete(event.aggregateId);
   }
 
+  private async onCatalogItemUpserted(event: CatalogItemUpsertedEvent) {
+    logger.info('Ready to handle onCatalogItemUpserted event on repository:', event);
+    const payloadInstance = (event as any).payload?.instance;
+    if (payloadInstance) {
+      const projectedEntity = this.repository.create({
+        ...(payloadInstance as any),
+        id: event.aggregateId,
+        type: 'catalog-item'
+      } as Partial<CatalogItem>);
+      return await this.repository.save(projectedEntity as CatalogItem);
+    }
+    return true;
+  }
+
+  private async onCatalogItemDeprecated(event: CatalogItemDeprecatedEvent) {
+    logger.info('Ready to handle onCatalogItemDeprecated event on repository:', event);
+    const payloadInstance = (event as any).payload?.instance;
+    if (payloadInstance) {
+      const projectedEntity = this.repository.create({
+        ...(payloadInstance as any),
+        id: event.aggregateId,
+        type: 'catalog-item'
+      } as Partial<CatalogItem>);
+      return await this.repository.save(projectedEntity as CatalogItem);
+    }
+    return true;
+  }
+
+  private async onCatalogItemArchived(event: CatalogItemArchivedEvent) {
+    logger.info('Ready to handle onCatalogItemArchived event on repository:', event);
+    const payloadInstance = (event as any).payload?.instance;
+    if (payloadInstance) {
+      const projectedEntity = this.repository.create({
+        ...(payloadInstance as any),
+        id: event.aggregateId,
+        type: 'catalog-item'
+      } as Partial<CatalogItem>);
+      return await this.repository.save(projectedEntity as CatalogItem);
+    }
+    return true;
+  }
+
+  private async onCatalogBulkImported(event: CatalogBulkImportedEvent) {
+    logger.info('Ready to handle onCatalogBulkImported event on repository:', event);
+    const payloadInstance = (event as any).payload?.instance;
+    if (payloadInstance) {
+      const projectedEntity = this.repository.create({
+        ...(payloadInstance as any),
+        id: event.aggregateId,
+        type: 'catalog-item'
+      } as Partial<CatalogItem>);
+      return await this.repository.save(projectedEntity as CatalogItem);
+    }
+    return true;
+  }
 
 
   // ----------------------------

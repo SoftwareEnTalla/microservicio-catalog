@@ -33,6 +33,10 @@ import { BaseEvent } from './base.event';
 import { CatalogItemCreatedEvent } from './catalogitemcreated.event';
 import { CatalogItemUpdatedEvent } from './catalogitemupdated.event';
 import { CatalogItemDeletedEvent } from './catalogitemdeleted.event';
+import { CatalogItemUpsertedEvent } from './catalogitemupserted.event';
+import { CatalogItemDeprecatedEvent } from './catalogitemdeprecated.event';
+import { CatalogItemArchivedEvent } from './catalogitemarchived.event';
+import { CatalogBulkImportedEvent } from './catalogbulkimported.event';
 
 export type RegisteredEventClass<T extends BaseEvent = BaseEvent> = new (
   aggregateId: string,
@@ -92,7 +96,10 @@ export const EVENT_DEFINITIONS: Record<string, RegisteredEventDefinition> = {
   'catalog-item-created': createEventDefinition('catalog-item-created', CatalogItemCreatedEvent, EVENT_DEFINITION_OVERRIDES['catalog-item-created']),
   'catalog-item-updated': createEventDefinition('catalog-item-updated', CatalogItemUpdatedEvent, EVENT_DEFINITION_OVERRIDES['catalog-item-updated']),
   'catalog-item-deleted': createEventDefinition('catalog-item-deleted', CatalogItemDeletedEvent, EVENT_DEFINITION_OVERRIDES['catalog-item-deleted']),
-
+  'catalog-item-upserted': createEventDefinition('catalog-item-upserted', CatalogItemUpsertedEvent, EVENT_DEFINITION_OVERRIDES['catalog-item-upserted']),
+  'catalog-item-deprecated': createEventDefinition('catalog-item-deprecated', CatalogItemDeprecatedEvent, EVENT_DEFINITION_OVERRIDES['catalog-item-deprecated']),
+  'catalog-item-archived': createEventDefinition('catalog-item-archived', CatalogItemArchivedEvent, EVENT_DEFINITION_OVERRIDES['catalog-item-archived']),
+  'catalog-bulk-imported': createEventDefinition('catalog-bulk-imported', CatalogBulkImportedEvent, EVENT_DEFINITION_OVERRIDES['catalog-bulk-imported']),
 };
 
 export const EVENT_REGISTRY: Record<string, RegisteredEventClass> = Object.fromEntries(

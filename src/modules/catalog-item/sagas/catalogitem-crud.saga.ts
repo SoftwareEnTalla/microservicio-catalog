@@ -36,7 +36,10 @@ import {
   CatalogItemCreatedEvent,
   CatalogItemUpdatedEvent,
   CatalogItemDeletedEvent,
-
+  CatalogItemUpsertedEvent,
+  CatalogItemDeprecatedEvent,
+  CatalogItemArchivedEvent,
+  CatalogBulkImportedEvent,
 } from '../events/exporting.event';
 import {
   SagaCatalogItemFailedEvent
@@ -100,6 +103,49 @@ export class CatalogItemCrudSaga {
     );
   };
 
+  @Saga()
+  onCatalogItemUpserted = ($events: Observable<CatalogItemUpsertedEvent>) => {
+    return $events.pipe(
+      ofType(CatalogItemUpsertedEvent),
+      tap(event => {
+        this.logger.log(`Saga iniciada para evento de dominio CatalogItemUpserted: ${event.aggregateId}`);
+      }),
+      map(() => null)
+    );
+  };
+
+  @Saga()
+  onCatalogItemDeprecated = ($events: Observable<CatalogItemDeprecatedEvent>) => {
+    return $events.pipe(
+      ofType(CatalogItemDeprecatedEvent),
+      tap(event => {
+        this.logger.log(`Saga iniciada para evento de dominio CatalogItemDeprecated: ${event.aggregateId}`);
+      }),
+      map(() => null)
+    );
+  };
+
+  @Saga()
+  onCatalogItemArchived = ($events: Observable<CatalogItemArchivedEvent>) => {
+    return $events.pipe(
+      ofType(CatalogItemArchivedEvent),
+      tap(event => {
+        this.logger.log(`Saga iniciada para evento de dominio CatalogItemArchived: ${event.aggregateId}`);
+      }),
+      map(() => null)
+    );
+  };
+
+  @Saga()
+  onCatalogBulkImported = ($events: Observable<CatalogBulkImportedEvent>) => {
+    return $events.pipe(
+      ofType(CatalogBulkImportedEvent),
+      tap(event => {
+        this.logger.log(`Saga iniciada para evento de dominio CatalogBulkImported: ${event.aggregateId}`);
+      }),
+      map(() => null)
+    );
+  };
 
   @LogExecutionTime({
     layer: 'saga',

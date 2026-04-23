@@ -30,7 +30,10 @@
 export * from "./catalogitemdeleted.event"; 
 export * from "./catalogitemcreated.event";
 export * from "./catalogitemupdated.event";
-
+export * from "./catalogitemupserted.event";
+export * from "./catalogitemdeprecated.event";
+export * from "./catalogitemarchived.event";
+export * from "./catalogbulkimported.event";
 export * from "./event-registry";
 export * from "./base.event";
 export * from "./catalogitem-failed.event";
