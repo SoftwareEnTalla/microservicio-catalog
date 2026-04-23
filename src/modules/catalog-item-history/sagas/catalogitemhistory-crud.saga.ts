@@ -36,7 +36,7 @@ import {
   CatalogItemHistoryCreatedEvent,
   CatalogItemHistoryUpdatedEvent,
   CatalogItemHistoryDeletedEvent,
-
+  CatalogItemVersionRecordedEvent,
 } from '../events/exporting.event';
 import {
   SagaCatalogItemHistoryFailedEvent
@@ -100,6 +100,16 @@ export class CatalogItemHistoryCrudSaga {
     );
   };
 
+  @Saga()
+  onCatalogItemVersionRecorded = ($events: Observable<CatalogItemVersionRecordedEvent>) => {
+    return $events.pipe(
+      ofType(CatalogItemVersionRecordedEvent),
+      tap(event => {
+        this.logger.log(`Saga iniciada para evento de dominio CatalogItemVersionRecorded: ${event.aggregateId}`);
+      }),
+      map(() => null)
+    );
+  };
 
   @LogExecutionTime({
     layer: 'saga',

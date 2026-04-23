@@ -53,7 +53,7 @@ import { IEventHandler, EventsHandler } from '@nestjs/cqrs';
 import { CatalogItemHistoryCreatedEvent } from '../events/catalogitemhistorycreated.event';
 import { CatalogItemHistoryUpdatedEvent } from '../events/catalogitemhistoryupdated.event';
 import { CatalogItemHistoryDeletedEvent } from '../events/catalogitemhistorydeleted.event';
-
+import { CatalogItemVersionRecordedEvent } from "../events/catalogitemversionrecorded.event";
 
 //Enfoque Event Sourcing
 import { CommandBus, EventBus } from '@nestjs/cqrs';
@@ -66,7 +66,7 @@ import { EventSourcingHelper } from '../shared/decorators/event-sourcing.helper'
 import { EventSourcingConfigOptions } from '../shared/decorators/event-sourcing.decorator';
 
 
-@EventsHandler(CatalogItemHistoryCreatedEvent, CatalogItemHistoryUpdatedEvent, CatalogItemHistoryDeletedEvent)
+@EventsHandler(CatalogItemHistoryCreatedEvent, CatalogItemHistoryUpdatedEvent, CatalogItemHistoryDeletedEvent, CatalogItemVersionRecordedEvent)
 @Injectable()
 export class CatalogItemHistoryCommandRepository implements IEventHandler<BaseEvent>{
 
@@ -158,7 +158,8 @@ export class CatalogItemHistoryCommandRepository implements IEventHandler<BaseEv
         return await this.onCatalogItemHistoryUpdated(event);
       case 'CatalogItemHistoryDeletedEvent':
         return await this.onCatalogItemHistoryDeleted(event);
-
+      case 'CatalogItemVersionRecordedEvent':
+        return await this.onCatalogItemVersionRecorded(event);
     }
     return false;
   }
@@ -252,6 +253,19 @@ export class CatalogItemHistoryCommandRepository implements IEventHandler<BaseEv
     return await this.repository.delete(event.aggregateId);
   }
 
+  private async onCatalogItemVersionRecorded(event: CatalogItemVersionRecordedEvent) {
+    logger.info('Ready to handle onCatalogItemVersionRecorded event on repository:', event);
+    const payloadInstance = (event as any).payload?.instance;
+    if (payloadInstance) {
+      const projectedEntity = this.repository.create({
+        ...(payloadInstance as any),
+        id: event.aggregateId,
+        type: 'catalog-item-history'
+      } as Partial<CatalogItemHistory>);
+      return await this.repository.save(projectedEntity as CatalogItemHistory);
+    }
+    return true;
+  }
 
 
   // ----------------------------

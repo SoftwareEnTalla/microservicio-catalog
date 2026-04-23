@@ -33,6 +33,7 @@ import { BaseEvent } from './base.event';
 import { CatalogItemHistoryCreatedEvent } from './catalogitemhistorycreated.event';
 import { CatalogItemHistoryUpdatedEvent } from './catalogitemhistoryupdated.event';
 import { CatalogItemHistoryDeletedEvent } from './catalogitemhistorydeleted.event';
+import { CatalogItemVersionRecordedEvent } from './catalogitemversionrecorded.event';
 
 export type RegisteredEventClass<T extends BaseEvent = BaseEvent> = new (
   aggregateId: string,
@@ -77,7 +78,7 @@ export const EVENT_DEFINITIONS: Record<string, RegisteredEventDefinition> = {
   'catalog-item-history-created': createEventDefinition('catalog-item-history-created', CatalogItemHistoryCreatedEvent, EVENT_DEFINITION_OVERRIDES['catalog-item-history-created']),
   'catalog-item-history-updated': createEventDefinition('catalog-item-history-updated', CatalogItemHistoryUpdatedEvent, EVENT_DEFINITION_OVERRIDES['catalog-item-history-updated']),
   'catalog-item-history-deleted': createEventDefinition('catalog-item-history-deleted', CatalogItemHistoryDeletedEvent, EVENT_DEFINITION_OVERRIDES['catalog-item-history-deleted']),
-
+  'catalog-item-version-recorded': createEventDefinition('catalog-item-version-recorded', CatalogItemVersionRecordedEvent, EVENT_DEFINITION_OVERRIDES['catalog-item-version-recorded']),
 };
 
 export const EVENT_REGISTRY: Record<string, RegisteredEventClass> = Object.fromEntries(
