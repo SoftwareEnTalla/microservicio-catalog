@@ -12,7 +12,7 @@ services:
       entalla-net: {}
       shared-net:
         aliases:
-          - risk-level
+          - upstream-sync-status
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:${PORT:-3000}/api-docs"]
       interval: 10s

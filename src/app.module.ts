@@ -57,6 +57,17 @@ import { HorizontalModule } from "@common/horizontal";
 
 import { NomencladorListenersModule } from './modules/nomenclador-listeners/nomenclador-listeners.module';
 
+import { ActiveStatusExpirableModule } from "./modules/active-status-expirable/modules/activestatusexpirable.module";
+import { ActiveStatusModule } from "./modules/active-status/modules/activestatus.module";
+import { ApprovalStatusModule } from "./modules/approval-status/modules/approvalstatus.module";
+import { CurrencyCodeModule } from "./modules/currency-code/modules/currencycode.module";
+import { CustomerOnboardingStatusModule } from "./modules/customer-onboarding-status/modules/customeronboardingstatus.module";
+import { DocumentTypeExtendedModule } from "./modules/document-type-extended/modules/documenttypeextended.module";
+import { DocumentTypeModule } from "./modules/document-type/modules/documenttype.module";
+import { LifecycleStatusModule } from "./modules/lifecycle-status/modules/lifecyclestatus.module";
+import { PermissionEffectModule } from "./modules/permission-effect/modules/permissioneffect.module";
+import { SettlementModeModule } from "./modules/settlement-mode/modules/settlementmode.module";
+import { UpstreamSyncStatusModule } from "./modules/upstream-sync-status/modules/upstreamsyncstatus.module";
 @Module({
   imports: [
     // Se importa/registra el módulo de caché
@@ -131,6 +142,17 @@ import { NomencladorListenersModule } from './modules/nomenclador-listeners/nome
       : []),
   
     NomencladorListenersModule,
+      ActiveStatusExpirableModule,
+    ActiveStatusModule,
+    ApprovalStatusModule,
+    CurrencyCodeModule,
+    CustomerOnboardingStatusModule,
+    DocumentTypeExtendedModule,
+    DocumentTypeModule,
+    LifecycleStatusModule,
+    PermissionEffectModule,
+    SettlementModeModule,
+    UpstreamSyncStatusModule,
   ],
 
   /**
