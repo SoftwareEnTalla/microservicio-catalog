@@ -30,13 +30,11 @@
 
 
 import { Module } from "@nestjs/common";
-import { LifecycleStatusCommandController } from "../controllers/lifecyclestatuscommand.controller";
 import { LifecycleStatusLoggingInterceptor } from "../interceptors/lifecyclestatus.logging.interceptor";
 import { CommandBus, EventBus, UnhandledExceptionBus } from "@nestjs/cqrs";
 import { LifecycleStatusAuthGuard } from "../guards/lifecyclestatusauthguard.guard";
 
 @Module({
-  controllers: [LifecycleStatusCommandController],
   providers: [
     LifecycleStatusAuthGuard,
     LifecycleStatusLoggingInterceptor,

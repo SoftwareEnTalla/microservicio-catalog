@@ -30,13 +30,11 @@
 
 
 import { Module } from "@nestjs/common";
-import { RiskLevelCommandController } from "../controllers/risklevelcommand.controller";
 import { RiskLevelLoggingInterceptor } from "../interceptors/risklevel.logging.interceptor";
 import { CommandBus, EventBus, UnhandledExceptionBus } from "@nestjs/cqrs";
 import { RiskLevelAuthGuard } from "../guards/risklevelauthguard.guard";
 
 @Module({
-  controllers: [RiskLevelCommandController],
   providers: [
     RiskLevelAuthGuard,
     RiskLevelLoggingInterceptor,

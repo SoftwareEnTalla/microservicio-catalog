@@ -30,13 +30,11 @@
 
 
 import { Module } from "@nestjs/common";
-import { SettlementModeCommandController } from "../controllers/settlementmodecommand.controller";
 import { SettlementModeLoggingInterceptor } from "../interceptors/settlementmode.logging.interceptor";
 import { CommandBus, EventBus, UnhandledExceptionBus } from "@nestjs/cqrs";
 import { SettlementModeAuthGuard } from "../guards/settlementmodeauthguard.guard";
 
 @Module({
-  controllers: [SettlementModeCommandController],
   providers: [
     SettlementModeAuthGuard,
     SettlementModeLoggingInterceptor,

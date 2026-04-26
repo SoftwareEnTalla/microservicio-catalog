@@ -30,13 +30,11 @@
 
 
 import { Module } from "@nestjs/common";
-import { DocumentTypeCommandController } from "../controllers/documenttypecommand.controller";
 import { DocumentTypeLoggingInterceptor } from "../interceptors/documenttype.logging.interceptor";
 import { CommandBus, EventBus, UnhandledExceptionBus } from "@nestjs/cqrs";
 import { DocumentTypeAuthGuard } from "../guards/documenttypeauthguard.guard";
 
 @Module({
-  controllers: [DocumentTypeCommandController],
   providers: [
     DocumentTypeAuthGuard,
     DocumentTypeLoggingInterceptor,

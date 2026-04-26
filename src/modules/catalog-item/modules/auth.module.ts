@@ -30,13 +30,11 @@
 
 
 import { Module } from "@nestjs/common";
-import { CatalogItemCommandController } from "../controllers/catalogitemcommand.controller";
 import { CatalogItemLoggingInterceptor } from "../interceptors/catalogitem.logging.interceptor";
 import { CommandBus, EventBus, UnhandledExceptionBus } from "@nestjs/cqrs";
 import { CatalogItemAuthGuard } from "../guards/catalogitemauthguard.guard";
 
 @Module({
-  controllers: [CatalogItemCommandController],
   providers: [
     CatalogItemAuthGuard,
     CatalogItemLoggingInterceptor,

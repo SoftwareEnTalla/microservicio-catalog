@@ -30,13 +30,11 @@
 
 
 import { Module } from "@nestjs/common";
-import { UpstreamSyncStatusCommandController } from "../controllers/upstreamsyncstatuscommand.controller";
 import { UpstreamSyncStatusLoggingInterceptor } from "../interceptors/upstreamsyncstatus.logging.interceptor";
 import { CommandBus, EventBus, UnhandledExceptionBus } from "@nestjs/cqrs";
 import { UpstreamSyncStatusAuthGuard } from "../guards/upstreamsyncstatusauthguard.guard";
 
 @Module({
-  controllers: [UpstreamSyncStatusCommandController],
   providers: [
     UpstreamSyncStatusAuthGuard,
     UpstreamSyncStatusLoggingInterceptor,

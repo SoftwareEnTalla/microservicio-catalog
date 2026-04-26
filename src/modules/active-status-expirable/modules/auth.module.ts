@@ -30,13 +30,11 @@
 
 
 import { Module } from "@nestjs/common";
-import { ActiveStatusExpirableCommandController } from "../controllers/activestatusexpirablecommand.controller";
 import { ActiveStatusExpirableLoggingInterceptor } from "../interceptors/activestatusexpirable.logging.interceptor";
 import { CommandBus, EventBus, UnhandledExceptionBus } from "@nestjs/cqrs";
 import { ActiveStatusExpirableAuthGuard } from "../guards/activestatusexpirableauthguard.guard";
 
 @Module({
-  controllers: [ActiveStatusExpirableCommandController],
   providers: [
     ActiveStatusExpirableAuthGuard,
     ActiveStatusExpirableLoggingInterceptor,

@@ -30,13 +30,11 @@
 
 
 import { Module } from "@nestjs/common";
-import { ApprovalStatusCommandController } from "../controllers/approvalstatuscommand.controller";
 import { ApprovalStatusLoggingInterceptor } from "../interceptors/approvalstatus.logging.interceptor";
 import { CommandBus, EventBus, UnhandledExceptionBus } from "@nestjs/cqrs";
 import { ApprovalStatusAuthGuard } from "../guards/approvalstatusauthguard.guard";
 
 @Module({
-  controllers: [ApprovalStatusCommandController],
   providers: [
     ApprovalStatusAuthGuard,
     ApprovalStatusLoggingInterceptor,

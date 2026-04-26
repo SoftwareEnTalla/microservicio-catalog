@@ -30,13 +30,11 @@
 
 
 import { Module } from "@nestjs/common";
-import { PermissionEffectCommandController } from "../controllers/permissioneffectcommand.controller";
 import { PermissionEffectLoggingInterceptor } from "../interceptors/permissioneffect.logging.interceptor";
 import { CommandBus, EventBus, UnhandledExceptionBus } from "@nestjs/cqrs";
 import { PermissionEffectAuthGuard } from "../guards/permissioneffectauthguard.guard";
 
 @Module({
-  controllers: [PermissionEffectCommandController],
   providers: [
     PermissionEffectAuthGuard,
     PermissionEffectLoggingInterceptor,

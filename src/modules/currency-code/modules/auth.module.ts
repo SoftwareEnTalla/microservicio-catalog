@@ -30,13 +30,11 @@
 
 
 import { Module } from "@nestjs/common";
-import { CurrencyCodeCommandController } from "../controllers/currencycodecommand.controller";
 import { CurrencyCodeLoggingInterceptor } from "../interceptors/currencycode.logging.interceptor";
 import { CommandBus, EventBus, UnhandledExceptionBus } from "@nestjs/cqrs";
 import { CurrencyCodeAuthGuard } from "../guards/currencycodeauthguard.guard";
 
 @Module({
-  controllers: [CurrencyCodeCommandController],
   providers: [
     CurrencyCodeAuthGuard,
     CurrencyCodeLoggingInterceptor,
