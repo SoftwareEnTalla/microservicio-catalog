@@ -51,22 +51,11 @@ import { CatalogItemHistoryModule } from "./modules/catalog-item-history/modules
 import { CatalogCategoryModule } from "./modules/catalog-category/modules/catalogcategory.module";
 import { CatalogTranslationModule } from "./modules/catalog-translation/modules/catalogtranslation.module";
 import { CatalogItemModule } from "./modules/catalog-item/modules/catalogitem.module";
+import { HorizontalModule } from "@common/horizontal";
 
+ 
 
-//import GraphQLJSON from "graphql-type-json";
-
-/*
-//TODO unused for while dependencies
-import { I18nModule } from "nestjs-i18n";
-import { join } from "path";
-import { CustomI18nLoader } from "./core/loaders/custom-I18n-Loader";
-import { TranslocoService } from "@jsverse/transloco";
-import { HeaderResolver, AcceptLanguageResolver } from "nestjs-i18n";
-import { TranslocoWrapperService } from "./core/services/transloco-wrapper.service";
-import { TranslocoModule } from "@ngneat/transloco";
-import LoggerService, { logger } from "@core/logs/logger";
-
-*/
+import { NomencladorListenersModule } from './modules/nomenclador-listeners/nomenclador-listeners.module';
 
 @Module({
   imports: [
@@ -116,6 +105,7 @@ import LoggerService, { logger } from "@core/logs/logger";
      * Módulos Catalog de la aplicación
      */
     CqrsModule,
+    HorizontalModule,
     CatalogModule,
         
     /**
@@ -139,6 +129,8 @@ import LoggerService, { logger } from "@core/logs/logger";
           }),
         ]
       : []),
+  
+    NomencladorListenersModule,
   ],
 
   /**

@@ -19,6 +19,9 @@
 8. [Guía para Desarrolladores](#8-guía-para-desarrolladores)
 9. [Test E2E con curl](#9-test-e2e-con-curl)
 10. [Análisis de Sagas y Eventos (E2E)](#10-análisis-de-sagas-y-eventos-e2e)
+11. [Nomencladores Sembrados (Bootstrap)](#11-nomencladores-sembrados-bootstrap)
+12. [Variables de Entorno](#12-variables-de-entorno)
+13. [Build & Run](#13-build--run)
 
 ---
 
@@ -365,7 +368,76 @@ Si las sagas CRUD no se disparan, es porque los repositorios publican sólo a Ka
 
 ---
 
-## 11. Variables de Entorno
+## 11. Nomencladores Sembrados (Bootstrap)
+
+Al arrancar `catalog-service`, los scripts SQL idempotentes en [src/database/](../database/) (ejecutados vía DSL §4.9) cargan las categorías e ítems de los nomencladores horizontales del ecosistema:
+
+- [postgres-1-catalog-categories.sql](../database/postgres-1-catalog-categories.sql) — categorías + `consumers`.
+- [postgres-2-catalog-items.sql](../database/postgres-2-catalog-items.sql) — ítems por categoría.
+- [postgres-3-catalog-translations.sql](../database/postgres-3-catalog-translations.sql) — traducciones `es` y `en`.
+- [init-order.txt](../database/init-order.txt) — orden de ejecución.
+
+### 11.1 Regla de gobierno (estricta)
+
+> **catalog-service almacena únicamente nomencladores compartidos por al menos 2 microservicios consumidores.**
+>
+> - Si un nomenclador lo usa **un solo** microservicio → NO va en catalog-service; permanece como `enum` DSL interno del servicio dueño.
+> - Toda categoría sembrada debe declarar **≥ 2 entradas** en su array JSON `consumers`.
+> - El único dueño de la categoría en catalog-service es `ownerService = 'catalog-service'`; los consumidores se enumeran en `consumers`.
+> - El sync de cada microservicio reconcilia siempre **a favor de los valores de catalog-service** (verdad mandataria). Los consumidores solo proveen valores locales como **fallback** cuando catalog-service está caído.
+
+**Categorías removidas por incumplir la regla** (anteriormente sembradas):
+
+| Removida | Motivo |
+|---|---|
+| `CATALOG_STATUS` | Solo lo consume `catalog-service` (estado interno de items/categorías). |
+| `PAYMENT_ATTEMPT_STATUS` | Solo lo consume `payment-service` (sub-estado interno del agregado `payment-attempt`). |
+| `EMPLOYEE_STATUS` | Solo lo consume `hrms-service` (ciclo laboral interno del agregado `employee`). |
+
+### 11.2 Catálogo vigente (17 categorías)
+
+| # | `categoryCode` | Ítems sembrados | Consumidores (`consumers`) | Origen DSL detectado |
+|---|---|---|---|---|
+| 1 | `CURRENCY` | USD, EUR, GBP, MXN, DOP, COP, CUP, BRL, ARS, CLP, PEN, CAD, JPY, CNY, CHF | payment, product, hrms, crm, organization, invoice, orders, salesmanager, merchant | `payment.currency`, `payment-attempt.currency`, `product-price.currency`, `product-variant.currency`, `crm/contract.currency`, `crm/subscription-plan.currency`, `crm/payment-milestone.currency`, `hrms/payroll.currency`, `hrms/employee.currency`, `organization/*.currency` |
+| 2 | `COUNTRY` | CU, US, MX, ES, CO, DO, PE, AR, CL, BR, EC, VE, CA, GB, FR, DE, IT, PT | security, customer, merchant, organization, crm, hrms, client, salesmanager | `crm/provider.country`, `organization/organization.country`, `security/user-profile.country` |
+| 3 | `LOCALE` | es, en, pt, fr, es-MX, es-ES, es-CU, en-US, en-GB, pt-BR, pt-PT, fr-FR, it, de | catalog, security, customer, merchant, product, crm, hrms, client | `catalog/catalog-translation.locale`, `security/user-profile.language`, i18n horizontal |
+| 4 | `GENDER` | MALE, FEMALE, OTHER, NOT_DECLARED | hrms, customer, security, client, crm | `hrms/person.gender` |
+| 5 | `DOCUMENT_TYPE` | NATIONAL_ID, PASSPORT, FOREIGN_ID, TAX_ID, DRIVER_LICENSE, OTHER | hrms, crm, client, customer, merchant, security, salesmanager | `hrms/person.documentType` (autoritativo) → mirror en `crm/provider.documentType`, `client/client.documentType` |
+| 6 | `APPROVAL_STATUS` | DRAFT, PENDING, APPROVED, REJECTED, SUSPENDED | security, merchant, salesmanager, crm | `security/security-merchant.approvalStatus`, `security/sales-manager.approvalStatus`, `salesmanager/salesmanager.approvalStatus`, `merchant/merchant.approvalStatus` |
+| 7 | `GENERIC_STATUS` | ACTIVE, INACTIVE | product, crm, hrms, organization | `product/product-media.status`, `product/product-variant.status`, `product/product-relationship.status`, `crm/provider.status` |
+| 8 | `CONTRACT_STATUS` | DRAFT, ACTIVE, SUSPENDED, TERMINATED, EXPIRED, PENDING | crm, salesmanager, merchant | `crm/contract.status`, `salesmanager/salesmanager-merchant-contract.status` |
+| 9 | `PAYMENT_STATUS` | CREATED, PENDING, REQUIRES_CUSTOMER_ACTION, AUTHORIZED, SUCCEEDED, FAILED, CANCELLED, EXPIRED | payment, orders, invoice | `payment/payment.status` |
+| 10 | `PAYMENT_GATEWAY_STATUS` | DRAFT, ACTIVE, INACTIVE, MAINTENANCE, DEPRECATED | payment, merchant | `payment/payment-gateway.status` |
+| 11 | `GATEWAY_ELIGIBILITY_STATUS` | NOT_STARTED, IN_PROGRESS, APPROVED, REJECTED, EXPIRED, BLOCKED | payment, customer, merchant | `payment/payment-customer-gateway-eligibility.status`, `customer/customer-gateway-onboarding.status` |
+| 12 | `MERCHANT_GATEWAY_STATUS` | NOT_CONFIGURED, ONBOARDING, ACTIVE, SUSPENDED, ERROR | merchant, payment | `merchant/merchant-gateway-config.status`, mirror en `payment/payment-merchant-gateway-eligibility.status` |
+| 13 | `ORDER_STATUS` | DRAFT, PLACED, CONFIRMED, IN_PROGRESS, FULFILLED, DELIVERED, CANCELLED, REFUNDED, RETURNED | orders, invoice, payment, product | Saga orders ↔ invoice ↔ payment (orders-service aún sin DSL; valores estandarizados) |
+| 14 | `INVOICE_STATUS` | DRAFT, ISSUED, PARTIALLY_PAID, PAID, OVERDUE, CANCELLED, VOID, REFUNDED | invoice, orders, payment | invoice-service aún sin DSL; valores estandarizados |
+| 15 | `PRODUCT_STATUS` | DRAFT, ACTIVE, OUT_OF_STOCK, ARCHIVED, DISCONTINUED | product, orders | `product/product.status` (`DRAFT,ACTIVE,ARCHIVED`) ampliado para orders |
+| 16 | `LOYALTY_TIER` | BRONZE, SILVER, GOLD, PLATINUM, DIAMOND | client, customer, crm | `client/client-loyalty-tier` (aggregate) |
+| 17 | `BUSINESS_DOC_TYPE` | INVOICE, CREDIT_NOTE, DEBIT_NOTE, RECEIPT, CONTRACT, NDA, PURCHASE_ORDER, QUOTE | invoice, crm, hrms, salesmanager | Tipos de documento generables (OnlyOffice + plantillas) |
+
+### 11.3 Verificación de la regla
+
+```sql
+-- Toda categoría debe tener ≥ 2 consumidores. Esta consulta NO debe retornar filas.
+SELECT "categoryCode", json_array_length("consumers") AS num_consumers
+FROM "catalog_category_base_entity"
+WHERE "type" = 'catalogcategory'
+  AND ("consumers" IS NULL OR json_array_length("consumers") < 2);
+```
+
+### 11.4 Cómo añadir un nuevo nomenclador
+
+1. Verificar que **al menos 2 microservicios** lo necesiten. Si solo uno → mantenerlo como `enum` DSL local.
+2. Añadir el `INSERT` de la categoría en [postgres-1-catalog-categories.sql](../database/postgres-1-catalog-categories.sql) con `consumers` JSON conteniendo ≥2 servicios.
+3. Añadir el bloque de ítems en [postgres-2-catalog-items.sql](../database/postgres-2-catalog-items.sql).
+4. Añadir traducciones `es` y `en` en [postgres-3-catalog-translations.sql](../database/postgres-3-catalog-translations.sql).
+5. Cada microservicio consumidor declara la categoría en su env `CATALOG_CATEGORIES=...` para que `CatalogSyncService` la sincronice.
+6. Mantener el seed local del consumidor en su DSL (fallback) reflejando exactamente los mismos `itemCode`s. Catalog es la verdad mandataria.
+
+---
+
+## 12. Variables de Entorno
 
 | Variable | Default | Uso |
 |----------|---------|-----|
@@ -384,7 +456,7 @@ Si las sagas CRUD no se disparan, es porque los repositorios publican sólo a Ka
 
 ---
 
-## 12. Build & Run
+## 13. Build & Run
 
 ```bash
 cd catalog-service

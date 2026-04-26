@@ -1,0 +1,16 @@
+postgres-1-catalog-sync-log.sql
+postgres-2-catalog-categories.sql
+postgres-3-catalog-items.sql
+postgres-4-catalog-translations.sql
+postgres-5-lifecycle-status.sql
+postgres-6-document-type.sql
+postgres-7-upstream-sync-status.sql
+postgres-8-active-status.sql
+postgres-9-customer-onboarding-status.sql
+postgres-10-risk-level.sql
+postgres-11-permission-effect.sql
+postgres-12-document-type-extended.sql
+postgres-13-settlement-mode.sql
+postgres-14-approval-status.sql
+postgres-15-currency-code.sql
+postgres-16-active-status-expirable.sql
