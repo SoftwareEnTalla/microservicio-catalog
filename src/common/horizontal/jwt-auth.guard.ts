@@ -25,6 +25,21 @@ import * as jwt from 'jsonwebtoken';
 import { IS_PUBLIC_KEY } from './public.decorator';
 
 const PUBLIC_PATH_PREFIXES = ['/health', '/metrics', '/api-docs', '/api/health', '/api/metrics'];
+const TRACE_SOURCE_HEADER = 'x-trace-source';
+const TRACE_PUBLIC_PATH_HEADER = 'x-trace-public-path';
+const SECURITY_PUBLIC_TRACE_PATHS: RegExp[] = [
+  /^\/api\/logins\/command(?:$|[/?])/i,
+  /^\/api\/users\/command\/signup(?:$|[/?])/i,
+  /^\/api\/.*(?:forgot|recover|reset|activate|verify|confirm|pin|mfa|totp|password)(?:$|[/?-])/i,
+];
+
+function isAllowedSecurityPublicTrace(path: string | undefined): boolean {
+  if (!path) {
+    return false;
+  }
+
+  return SECURITY_PUBLIC_TRACE_PATHS.some((pattern) => pattern.test(path));
+}
 
 @Injectable()
 export class JwtAuthGuard implements CanActivate {
@@ -54,6 +69,17 @@ export class JwtAuthGuard implements CanActivate {
       typeof authHeader === 'string' && authHeader.toLowerCase().startsWith('bearer ')
         ? authHeader.substring(7).trim()
         : undefined;
+
+    const traceSourceHeader = request.headers[TRACE_SOURCE_HEADER] as string | undefined;
+    const tracePublicPathHeader = request.headers[TRACE_PUBLIC_PATH_HEADER] as string | undefined;
+    if (
+      !token &&
+      traceSourceHeader?.toLowerCase() === 'security-service' &&
+      isAllowedSecurityPublicTrace(tracePublicPathHeader) &&
+      (url === '/api/codetraces/command' || url.startsWith('/api/codetraces/command?'))
+    ) {
+      return true;
+    }
 
     if (!token) {
       throw new UnauthorizedException('Missing Bearer token');

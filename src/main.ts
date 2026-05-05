@@ -45,6 +45,7 @@ import { join } from "path";
 import { loadEnv, watchEnvChanges } from "@core/loaders/load-enviroments";
 
 import { AllExceptionsFilter } from "./filters/all-exception.filter";
+import { runWithRequestTraceContext } from "./common/logger/request-trace-context";
 // Helmet se carga din\u00e1micamente m\u00e1s abajo para soportar CommonJS y ESM.
 
 const envPath = join(process.cwd(), ".env");
@@ -131,7 +132,19 @@ async function bootstrap() {
     });
     app.enableShutdownHooks();
     const globalPrefix = "api";
-    app.setGlobalPrefix(globalPrefix);
+        app.setGlobalPrefix(globalPrefix);
+        app.use((req, res, next) => {
+          const authorizationHeader = req.headers.authorization;
+          const requestPath = String(req.originalUrl || req.url || "");
+
+          runWithRequestTraceContext(
+            {
+              authorizationHeader: typeof authorizationHeader === "string" ? authorizationHeader : undefined,
+              requestPath,
+            },
+            next,
+          );
+        });
 
     // Helmet (headers de seguridad). Carga din\u00e1mica para no romper si la dep no est\u00e1 instalada en runtime.
     try {
