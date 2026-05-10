@@ -68,6 +68,7 @@ import { LifecycleStatusModule } from "./modules/lifecycle-status/modules/lifecy
 import { PermissionEffectModule } from "./modules/permission-effect/modules/permissioneffect.module";
 import { SettlementModeModule } from "./modules/settlement-mode/modules/settlementmode.module";
 import { UpstreamSyncStatusModule } from "./modules/upstream-sync-status/modules/upstreamsyncstatus.module";
+import { CatalogSyncModule } from "./modules/catalog-sync-log/catalogsync.module";
 @Module({
   imports: [
     // Se importa/registra el módulo de caché
@@ -153,6 +154,7 @@ import { UpstreamSyncStatusModule } from "./modules/upstream-sync-status/modules
     PermissionEffectModule,
     SettlementModeModule,
     UpstreamSyncStatusModule,
+    CatalogSyncModule,
   ],
 
   /**

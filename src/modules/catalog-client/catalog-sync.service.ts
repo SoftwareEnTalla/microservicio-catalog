@@ -282,7 +282,7 @@ export class CatalogSyncService implements OnApplicationBootstrap, OnModuleDestr
       const table = this.config.get<string>('CATALOG_SYNC_LOG_TABLE') ?? 'catalog_sync_log_base_entity';
       await this.dataSource.query(
         `INSERT INTO ${table}
-          (id, type, "creationDate", "modificationDate", "createdBy", active,
+          (id, type, "creationDate", "modificationDate", "createdBy", "isActive",
            name, description,
            "categoryCode", "triggeredBy",
            "itemsAddedCount", "itemsUpdatedCount", "itemsRemovedCount",
