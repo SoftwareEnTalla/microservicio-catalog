@@ -139,7 +139,21 @@ VALUES
    '["client-service","customer-service","crm-service"]'::json,
    'ACTIVE', '1.0.0', 0, NULL),
 
-  -- 18. Tipos de documento corporativo (recibo, contrato, NDA, etc.)
+  -- 19. Estado de payout request del circuito withdrawable
+  (uuid_generate_v4(), 'catalogcategory', NOW(), NOW(), 'system', true,
+   'Payout request status', 'Estado operativo de una solicitud de payout dentro del circuito withdrawable',
+   'PAYOUT_REQUEST_STATUS', 'catalog-service',
+   '["payment-service","merchant-service","codetrace-service"]'::json,
+   'ACTIVE', '1.0.0', 0, NULL),
+
+  -- 20. Tipos de movimiento del wallet loyalty/comercial
+  (uuid_generate_v4(), 'catalogcategory', NOW(), NOW(), 'system', true,
+   'Wallet movement type', 'Tipos de movimiento del wallet para cashback, referral y payouts',
+   'WALLET_MOVEMENT_TYPE', 'catalog-service',
+   '["payment-service","customer-service","codetrace-service"]'::json,
+   'ACTIVE', '1.0.0', 0, NULL),
+
+  -- 21. Tipos de documento corporativo (recibo, contrato, NDA, etc.)
   (uuid_generate_v4(), 'catalogcategory', NOW(), NOW(), 'system', true,
    'Business document type', 'Tipos de documentos corporativos generables (factura, NDA, contrato...)',
    'BUSINESS_DOC_TYPE', 'catalog-service',

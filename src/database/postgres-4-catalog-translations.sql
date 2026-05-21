@@ -157,6 +157,19 @@ JOIN (
   ('LOYALTY_TIER','PLATINUM','es','Platino'),  ('LOYALTY_TIER','PLATINUM','en','Platinum'),
   ('LOYALTY_TIER','DIAMOND','es','Diamante'),  ('LOYALTY_TIER','DIAMOND','en','Diamond'),
 
+  -- ==================== PAYOUT_REQUEST_STATUS ====================
+  ('PAYOUT_REQUEST_STATUS','REQUESTED','es','Solicitado'), ('PAYOUT_REQUEST_STATUS','REQUESTED','en','Requested'),
+  ('PAYOUT_REQUEST_STATUS','APPROVED','es','Aprobado'),    ('PAYOUT_REQUEST_STATUS','APPROVED','en','Approved'),
+  ('PAYOUT_REQUEST_STATUS','REJECTED','es','Rechazado'),   ('PAYOUT_REQUEST_STATUS','REJECTED','en','Rejected'),
+  ('PAYOUT_REQUEST_STATUS','SETTLED','es','Liquidado'),    ('PAYOUT_REQUEST_STATUS','SETTLED','en','Settled'),
+
+  -- ==================== WALLET_MOVEMENT_TYPE =====================
+  ('WALLET_MOVEMENT_TYPE','CASHBACK_EARNED','es','Cashback acreditado'),                 ('WALLET_MOVEMENT_TYPE','CASHBACK_EARNED','en','Cashback earned'),
+  ('WALLET_MOVEMENT_TYPE','REFERRAL_COMMISSION_EARNED','es','Comisión por referido acreditada'), ('WALLET_MOVEMENT_TYPE','REFERRAL_COMMISSION_EARNED','en','Referral commission earned'),
+  ('WALLET_MOVEMENT_TYPE','PAYOUT_REQUESTED','es','Retiro solicitado'),                  ('WALLET_MOVEMENT_TYPE','PAYOUT_REQUESTED','en','Payout requested'),
+  ('WALLET_MOVEMENT_TYPE','PAYOUT_REVERSED','es','Retiro revertido'),                    ('WALLET_MOVEMENT_TYPE','PAYOUT_REVERSED','en','Payout reversed'),
+  ('WALLET_MOVEMENT_TYPE','PAYOUT_SETTLED','es','Retiro liquidado'),                     ('WALLET_MOVEMENT_TYPE','PAYOUT_SETTLED','en','Payout settled'),
+
   -- ===================== BUSINESS_DOC_TYPE =======================
   ('BUSINESS_DOC_TYPE','INVOICE','es','Factura'),                  ('BUSINESS_DOC_TYPE','INVOICE','en','Invoice'),
   ('BUSINESS_DOC_TYPE','CREDIT_NOTE','es','Nota de crédito'),      ('BUSINESS_DOC_TYPE','CREDIT_NOTE','en','Credit note'),

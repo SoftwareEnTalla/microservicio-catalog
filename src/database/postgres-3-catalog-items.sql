@@ -422,6 +422,50 @@ ON CONFLICT ON CONSTRAINT "uq_catalog_item_code" DO UPDATE SET
   "version" = "catalog_item_base_entity"."version" + 1;
 
 -- ---------------------------------------------------------------------
+-- PAYOUT_REQUEST_STATUS
+-- ---------------------------------------------------------------------
+INSERT INTO "catalog_item_base_entity"
+  ("id","type","creationDate","modificationDate","createdBy","isActive",
+   "name","description","categoryId","categoryCode","itemCode","label","sortOrder","isDefault","status","version","metadata")
+SELECT uuid_generate_v4(),'catalogitem',NOW(),NOW(),'system',true,
+       v.code,v.label,cc."id",'PAYOUT_REQUEST_STATUS',v.code,v.label,v.ord,v.is_default,'ACTIVE',1,NULL
+FROM "catalog_category_base_entity" cc
+CROSS JOIN (VALUES
+  ('REQUESTED','Requested',1,true),
+  ('APPROVED','Approved',2,false),
+  ('REJECTED','Rejected',3,false),
+  ('SETTLED','Settled',4,false)
+) AS v(code,label,ord,is_default)
+WHERE cc."categoryCode" = 'PAYOUT_REQUEST_STATUS' AND cc."type" = 'catalogcategory'
+ON CONFLICT ON CONSTRAINT "uq_catalog_item_code" DO UPDATE SET
+  "modificationDate"=NOW(),"label"=EXCLUDED."label","sortOrder"=EXCLUDED."sortOrder",
+  "isDefault"=EXCLUDED."isDefault","status"=EXCLUDED."status",
+  "version" = "catalog_item_base_entity"."version" + 1;
+
+-- ---------------------------------------------------------------------
+-- WALLET_MOVEMENT_TYPE
+-- ---------------------------------------------------------------------
+INSERT INTO "catalog_item_base_entity"
+  ("id","type","creationDate","modificationDate","createdBy","isActive",
+   "name","description","categoryId","categoryCode","itemCode","label","sortOrder","isDefault","status","version","metadata")
+SELECT uuid_generate_v4(),'catalogitem',NOW(),NOW(),'system',true,
+       v.code,v.label,cc."id",'WALLET_MOVEMENT_TYPE',v.code,v.label,v.ord,v.is_default,'ACTIVE',1,
+       jsonb_build_object('financialImpact', v.financial_impact, 'channel', v.channel)::json
+FROM "catalog_category_base_entity" cc
+CROSS JOIN (VALUES
+  ('CASHBACK_EARNED','Cashback earned',1,true,'credit','loyalty'),
+  ('REFERRAL_COMMISSION_EARNED','Referral commission earned',2,false,'credit','referral'),
+  ('PAYOUT_REQUESTED','Payout requested',3,false,'debit','payout'),
+  ('PAYOUT_REVERSED','Payout reversed',4,false,'credit','payout'),
+  ('PAYOUT_SETTLED','Payout settled',5,false,'debit','payout')
+) AS v(code,label,ord,is_default,financial_impact,channel)
+WHERE cc."categoryCode" = 'WALLET_MOVEMENT_TYPE' AND cc."type" = 'catalogcategory'
+ON CONFLICT ON CONSTRAINT "uq_catalog_item_code" DO UPDATE SET
+  "modificationDate"=NOW(),"label"=EXCLUDED."label","sortOrder"=EXCLUDED."sortOrder",
+  "isDefault"=EXCLUDED."isDefault","status"=EXCLUDED."status","metadata"=EXCLUDED."metadata",
+  "version" = "catalog_item_base_entity"."version" + 1;
+
+-- ---------------------------------------------------------------------
 -- BUSINESS_DOC_TYPE
 -- ---------------------------------------------------------------------
 INSERT INTO "catalog_item_base_entity"

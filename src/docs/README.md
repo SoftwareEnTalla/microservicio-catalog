@@ -415,6 +415,8 @@ Al arrancar `catalog-service`, los scripts SQL idempotentes en [src/database/](.
 | 15 | `PRODUCT_STATUS` | DRAFT, ACTIVE, OUT_OF_STOCK, ARCHIVED, DISCONTINUED | product, orders | `product/product.status` (`DRAFT,ACTIVE,ARCHIVED`) ampliado para orders |
 | 16 | `LOYALTY_TIER` | BRONZE, SILVER, GOLD, PLATINUM, DIAMOND | client, customer, crm | `client/client-loyalty-tier` (aggregate) |
 | 17 | `BUSINESS_DOC_TYPE` | INVOICE, CREDIT_NOTE, DEBIT_NOTE, RECEIPT, CONTRACT, NDA, PURCHASE_ORDER, QUOTE | invoice, crm, hrms, salesmanager | Tipos de documento generables (OnlyOffice + plantillas) |
+| 18 | `PAYOUT_REQUEST_STATUS` | REQUESTED, APPROVED, REJECTED, SETTLED | payment, merchant, codetrace | `payment/payment-payout-request.status`, trazabilidad financiera y revisión operativa del retiro |
+| 19 | `WALLET_MOVEMENT_TYPE` | CASHBACK_EARNED, REFERRAL_COMMISSION_EARNED, PAYOUT_REQUESTED, PAYOUT_REVERSED, PAYOUT_SETTLED | payment, customer, codetrace | `payment/payment-wallet-movement.movementType`, resúmenes loyalty visibles en customer y trazabilidad financiera |
 
 ### 11.3 Verificación de la regla
 
